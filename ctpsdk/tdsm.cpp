@@ -40,20 +40,18 @@ private:
         emit sm()->onInfo("TdSmSpi::OnRspUserLogin");
         if (bIsLast && !isErrorRsp(pRspInfo, nRequestID)) {
             emit sm()->onStatusChanged(TDSM_LOGINED);
-            logined_ = true;
             emit sm()->onRunCmd(new CmdTdQueryInstrument());
         }
     }
-    /*
+
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         emit sm()->onInfo("TdSmSpi::OnRspUserLogout");
         if (!isErrorRsp(pRspInfo,nRequestID) && bIsLast){
-            logined_ = false;
-            //sm()->doStop();
+            emit sm()->onStatusChanged(TDSM_LOGOUTED);
         }
     }
-*/
+
     void OnRspError(RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         emit sm()->onInfo(QString().sprintf("TdSmSpi::OnRspError,reqId=%d", nRequestID));
@@ -108,18 +106,14 @@ public:
 
     void resetData()
     {
-        reqID_ = 1;
         ids_.clear();
         idFilters_.clear();
-        logined_ = false;
     }
 
 private:
     TdSm* sm_;
-    int reqID_ = 1;
     QStringList ids_;
     QStringList idFilters_;
-    bool logined_ = false;
 };
 
 ///////////
@@ -169,16 +163,13 @@ void TdSm::start()
     emit this->onStatusChanged(TDSM_STOPPED);
 }
 
-// 先要logout=
-void TdSm::stop()
+void TdSm::logout()
 {
-    //emit this->onRunCmd(new CmdTdLogout(userId(),brokerId()));
-    doStop();
+    emit this->onInfo("TdSm::logout");
+    emit this->onRunCmd(new CmdTdLogout(userId(),brokerId()));
 }
 
-// 这个需要在ui线程上调用=
-// 发现调用了logout再release会出问题，等排除=
-void TdSm::doStop()
+void TdSm::stop()
 {
     emit this->onInfo("TdSm::stop");
     if (tdapi_ == nullptr) {

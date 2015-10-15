@@ -17,7 +17,7 @@ void CtpCmdMgr::runNow(){
     cmd->runNow();
     if (cmd->result() == -3){
         cmd->resetId();
-        emit onInfo(QString().sprintf("发包太快，reqid=%d",cmd->reqId()));
+        emit onInfo(QString().sprintf("发包太快，reqId=%d",cmd->reqId()));
         return;
     }
     cmds_.dequeue();
@@ -32,7 +32,7 @@ void CmdMdLogin::run(){
     strncpy(req.UserID, userName_.toStdString().c_str(),sizeof(req.UserID)-1);
     strncpy(req.Password, password_.toStdString().c_str(),sizeof(req.Password)-1);
     result_ = mdapi()->ReqUserLogin(&req, reqId_);
-    info("CmdMdLogin");
+    info(QString().sprintf("CmdMdLogin,reqId=%d",reqId_));
 }
 
 void CmdMdSubscrible::run(){
@@ -54,7 +54,7 @@ void CmdTdLogin::run(){
     strncpy(req.UserID, userName_.toStdString().c_str(),sizeof(req.UserID)-1);
     strncpy(req.Password, password_.toStdString().c_str(),sizeof(req.Password)-1);
     result_ = tdapi()->ReqUserLogin(&req, reqId_);
-    info("CmdTdLogin");
+    info(QString().sprintf("CmdTdLogin,reqId=%d",reqId_));
 }
 
 void CmdTdLogout::run(){
@@ -63,12 +63,13 @@ void CmdTdLogout::run(){
     strncpy(req.BrokerID, brokerId_.toStdString().c_str(),sizeof(req.BrokerID)-1);
     strncpy(req.UserID, userName_.toStdString().c_str(),sizeof(req.UserID)-1);
     result_ = tdapi()->ReqUserLogout(&req, reqId_);
-    info("CmdTdLogin");
+    info(QString().sprintf("CmdTdLogout,reqId=%d",reqId_));
 }
 
+//不需要确认账单就可以查询合约=
 void CmdTdQueryInstrument::run(){
     QryInstrumentField req;
     memset(&req, 0, sizeof(req));
     result_ = tdapi()->ReqQryInstrument(&req, reqId_);
-    info("CmdTdQueryInstrument");
+    info(QString().sprintf("CmdTdQueryInstrument,reqId=%d",reqId_));
 }

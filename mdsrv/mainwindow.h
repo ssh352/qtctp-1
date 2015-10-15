@@ -18,10 +18,12 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
-    void on_mdsm_statechanged(int state);
-    void on_tdsm_statechanged(int state);
-    void on_info(QString msg);
-    void on_got_ids(QStringList ids);
+
+public slots:
+    void onMdSmStateChanged(int state);
+    void onTdSmStateChanged(int state);
+    void onInfo(QString msg);
+    void onGotIds(QStringList ids);
 
 private slots:
     void on_actionAbout_triggered();
@@ -29,6 +31,9 @@ private slots:
     void on_actionExit_triggered();
     void on_actionStart_triggered();
     void on_actionStop_triggered();
+
+private:
+    void loadCfg();
 
 private:
     Ui::MainWindow* ui;

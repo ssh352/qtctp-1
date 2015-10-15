@@ -19,6 +19,7 @@ private:
         emit sm()->onStatusChanged(MDSM_CONNECTED);
         emit sm()->onRunCmd(new CmdMdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
+
     // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
     void OnFrontDisconnected(int nReason) override
@@ -27,10 +28,12 @@ private:
         emit sm()->onInfo("MdSmSpi::OnFrontDisconnected");
         emit sm()->onStatusChanged(MDSM_DISCONNECTED);
     }
+
     void OnHeartBeatWarning(int nTimeLapse) override
     {
         emit sm()->onInfo("MdSmSpi::OnHeartBeatWarning");
     }
+
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         emit sm()->onInfo("MdSmSpi::OnRspUserLogin");
@@ -38,14 +41,17 @@ private:
             emit sm()->onStatusChanged(MDSM_LOGINED);
         }
     }
+
     // logout在tdapi里面是有效的
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
     }
+
     void OnRspError(RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         emit sm()->onInfo(QString().sprintf("MdSmSpi::OnRspError,reqId=%d", nRequestID));
     }
+
     // 订阅成功了也会调用,目前是不管啥都返回订阅成功
     void OnRspSubMarketData(SpecificInstrumentField* pSpecificInstrument, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
@@ -59,21 +65,26 @@ private:
             emit sm()->onStatusChanged(MDSM_RECVING);
         }
     }
+
     void OnRspUnSubMarketData(SpecificInstrumentField* pSpecificInstrument, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
     }
-    /*
+
     void OnRtnDepthMarketData(DepthMarketDataField* pDepthMarketData) override
     {
         DepthMarketDataField* mdf = pDepthMarketData;
-        QString data = QString().sprintf("%8s-%8s-%3d %6s %5.2f %7d %5.2f %3d %5.2f %3d\n",
+
+        if(QString(mdf->InstrumentID).toLower()!="sr601")
+            return;
+
+        QString data = QString().sprintf("%8s-%8s-%3d %6s %5.2f %7d %5.2f %3d %5.2f %3d",
                               mdf->TradingDay, mdf->UpdateTime, mdf->UpdateMillisec,
                               mdf->InstrumentID, mdf->LastPrice, mdf->Volume,
                               mdf->BidPrice1, mdf->BidVolume1, mdf->AskPrice1, mdf->AskVolume1);
 
         emit sm()->onInfo(data);
     }
-    */
+
 
 public:
     bool isErrorRsp(RspInfoField* pRspInfo, int reqId)
@@ -92,13 +103,11 @@ public:
 
     void resetData()
     {
-        reqID_ = 1;
         got_ids_.clear();
     }
 
 private:
     MdSm* sm_;
-    int reqID_ = 1;
     QStringList got_ids_;
 };
 
@@ -160,5 +169,6 @@ void MdSm::stop()
 
 void MdSm::subscrible(QStringList ids)
 {
+    emit this->onInfo("MdSm::subscrible");
     emit this->onRunCmd(new CmdMdSubscrible(ids));
 }

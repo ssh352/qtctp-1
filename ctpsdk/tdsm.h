@@ -10,6 +10,7 @@ enum {
     TDSM_CONNECTED,
     TDSM_LOGINED,
     TDSM_RECVING,
+    TDSM_LOGOUTED,
     TDSM_STOPPED
 };
 
@@ -23,6 +24,7 @@ public:
 public:
     void init(QString name, QString pwd, QString brokerId, QString front, QString flowPath,QString ids);
     void start();
+    void logout();
     void stop();
 
 protected:
