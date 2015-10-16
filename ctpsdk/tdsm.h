@@ -26,6 +26,7 @@ public:
     void start();
     void logout();
     void stop();
+    static QString version();
 
 protected:
     TraderApi* tdapi() { return tdapi_; }

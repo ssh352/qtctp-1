@@ -2,6 +2,7 @@
 #define MdSm_H
 
 #include <QObject>
+#include <QVariantMap>
 
 class MdApi;
 
@@ -25,6 +26,7 @@ public:
     void start();
     void stop();
     void subscrible(QStringList ids);
+    static QString version();
 
 protected:
     MdApi* mdapi() { return mdapi_; }
@@ -36,6 +38,7 @@ signals:
     void onStatusChanged(int state);
     void onInfo(QString msg);
     void onRunCmd(void* cmd);
+    void onGotMd(QVariantMap mdItem);
 
 private:
     QString name_;

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVariantMap>
 
 namespace Ui {
 class MainWindow;
@@ -24,16 +25,17 @@ public slots:
     void onTdSmStateChanged(int state);
     void onInfo(QString msg);
     void onGotIds(QStringList ids);
+    void onGotMd(QVariantMap item);
 
 private slots:
     void on_actionAbout_triggered();
     void on_actionConfig_triggered();
-    void on_actionExit_triggered();
     void on_actionStart_triggered();
     void on_actionStop_triggered();
 
 private:
     void loadCfg();
+    void closeEvent (QCloseEvent *event) override;
 
 private:
     Ui::MainWindow* ui;
@@ -43,6 +45,7 @@ private:
     QThread* tdsm_thread_ = nullptr;
     QString userName_,password_,brokerId_,frontTd_,frontMd_,subscribleIds_;
     CtpCmdMgr *cmdmgr_;
+    QMap<QString,int> ids_row_;
 
 };
 

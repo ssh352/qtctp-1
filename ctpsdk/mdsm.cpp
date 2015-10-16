@@ -58,7 +58,7 @@ private:
         if (!isErrorRsp(pRspInfo, nRequestID) && pSpecificInstrument) {
             QString iid = pSpecificInstrument->InstrumentID;
             got_ids_ << iid;
-            emit sm()->onInfo(QString().sprintf("sub:%s ok", iid.toUtf8().data()));
+            emit sm()->onInfo(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
         }
 
         if (bIsLast && got_ids_.length()) {
@@ -74,23 +74,26 @@ private:
     {
         DepthMarketDataField* mdf = pDepthMarketData;
 
-        if(QString(mdf->InstrumentID).toLower()!="sr601")
-            return;
-
-        QString data = QString().sprintf("%8s-%8s-%3d %6s %5.2f %7d %5.2f %3d %5.2f %3d",
-                              mdf->TradingDay, mdf->UpdateTime, mdf->UpdateMillisec,
-                              mdf->InstrumentID, mdf->LastPrice, mdf->Volume,
-                              mdf->BidPrice1, mdf->BidVolume1, mdf->AskPrice1, mdf->AskVolume1);
-
-        emit sm()->onInfo(data);
+        QVariantMap item;
+        item.insert("InstrumentID",mdf->InstrumentID);
+        item.insert("TradingDay",mdf->TradingDay);
+        item.insert("UpdateTime",mdf->UpdateTime);
+        item.insert("UpdateMillisec",mdf->UpdateMillisec);
+        item.insert("LastPrice",mdf->LastPrice);
+        item.insert("Volume",mdf->Volume);
+        item.insert("OpenInterest",mdf->OpenInterest);
+        item.insert("BidPrice1",mdf->BidPrice1);
+        item.insert("BidVolume1",mdf->BidVolume1);
+        item.insert("AskPrice1",mdf->AskPrice1);
+        item.insert("AskVolume1",mdf->AskVolume1);
+        emit sm()->onGotMd(item);
     }
-
 
 public:
     bool isErrorRsp(RspInfoField* pRspInfo, int reqId)
     {
         if (pRspInfo && pRspInfo->ErrorID != 0) {
-            emit sm()->onInfo(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().data()));
+            emit sm()->onInfo(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
             return true;
         }
         return false;
@@ -171,4 +174,8 @@ void MdSm::subscrible(QStringList ids)
 {
     emit this->onInfo("MdSm::subscrible");
     emit this->onRunCmd(new CmdMdSubscrible(ids));
+}
+
+QString MdSm::version(){
+    return MdApi::GetApiVersion();
 }

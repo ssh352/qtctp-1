@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>595</width>
-    <height>470</height>
+    <width>808</width>
+    <height>619</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -28,49 +28,70 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0">
-      <item>
-       <widget class="QPushButton" name="startButton">
-        <property name="text">
-         <string>start</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="stopButton">
-        <property name="text">
-         <string>stop</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="aboutButton">
-        <property name="text">
-         <string>about</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </item>
-    <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QTableWidget" name="tableWidget"/>
+      <widget class="QTableWidget" name="tableWidget">
+       <property name="rowCount">
+        <number>0</number>
+       </property>
+       <column>
+        <property name="text">
+         <string>InstrumentID</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>TradingDay</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>UpdateTime</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>UpdateMillisec</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>LastPrice</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Volume</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>OpenInterest</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>BidPrice1</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>BidVolume1</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>AskPrice1</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>AskVolume1</string>
+        </property>
+       </column>
+      </widget>
       <widget class="QListWidget" name="listWidget"/>
      </widget>
     </item>
@@ -81,7 +102,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>595</width>
+     <width>808</width>
      <height>23</height>
     </rect>
    </property>
@@ -89,12 +110,10 @@
     <property name="title">
      <string>system</string>
     </property>
-    <addaction name="actionConfig"/>
-    <addaction name="separator"/>
     <addaction name="actionStart"/>
     <addaction name="actionStop"/>
     <addaction name="separator"/>
-    <addaction name="actionExit"/>
+    <addaction name="actionConfig"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -110,77 +129,29 @@
     <string>config...</string>
    </property>
   </action>
-  <action name="actionExit">
-   <property name="text">
-    <string>exit</string>
-   </property>
-  </action>
   <action name="actionStart">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>start</string>
+    <string>start...</string>
    </property>
   </action>
   <action name="actionStop">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>stop</string>
    </property>
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>about...</string>
+    <string>api version</string>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections>
-  <connection>
-   <sender>aboutButton</sender>
-   <signal>clicked()</signal>
-   <receiver>actionAbout</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>452</x>
-     <y>44</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>startButton</sender>
-   <signal>clicked()</signal>
-   <receiver>actionStart</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>128</x>
-     <y>44</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>stopButton</sender>
-   <signal>clicked()</signal>
-   <receiver>actionStop</receiver>
-   <slot>trigger()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>209</x>
-     <y>44</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

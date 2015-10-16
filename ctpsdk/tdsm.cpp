@@ -73,7 +73,7 @@ private:
                 for (int i = 0; i < idFilters_.length(); i++) {
                     filter = idFilters_.at(i);
                     if (low_iid.startsWith(filter)) {
-                        emit sm()->onInfo(QString().sprintf("got id:%s", low_iid.toUtf8().data()));
+                        emit sm()->onInfo(QString().sprintf("got id:%s", low_iid.toUtf8().constData()));
                         ids_ << iid;
                         break;
                     }
@@ -93,7 +93,7 @@ public:
     bool isErrorRsp(RspInfoField* pRspInfo, int reqId)
     {
         if (pRspInfo && pRspInfo->ErrorID != 0) {
-            emit sm()->onInfo(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().data()));
+            emit sm()->onInfo(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
             return true;
         }
         return false;
@@ -179,4 +179,8 @@ void TdSm::stop()
     tdapi_->RegisterSpi(nullptr);
     tdapi_->Release();
     tdapi_ = nullptr;
+}
+
+QString TdSm::version(){
+    return TraderApi::GetApiVersion();
 }
