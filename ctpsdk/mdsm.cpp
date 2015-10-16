@@ -240,7 +240,12 @@ QString MdSm::version()
     return MdApi::GetApiVersion();
 }
 
+//断网自动重连后再次走这里，先free再来=
 void MdSm::initRb(QStringList ids){
+    if(rbs_.count()){
+        freeRb();
+    }
+
     for(int i=0;i<ids.count();i++){
         QString id = ids.at(i);
         MdRingBuffer* rb = new MdRingBuffer;

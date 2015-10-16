@@ -8,6 +8,7 @@ ConfigDialog::ConfigDialog(QWidget *parent) :
     ui(new Ui::ConfigDialog)
 {
     ui->setupUi(this);
+    setWindowTitle("config");
 }
 
 ConfigDialog::~ConfigDialog()

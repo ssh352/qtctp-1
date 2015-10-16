@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->setupUi(this);
     ui->splitter->setStretchFactor(0, 3);
     ui->splitter->setStretchFactor(1, 1);
+    setWindowTitle("mdsrv");
 
     //设置cmdmgr
     cmdmgr_->setInterval(100);
@@ -184,8 +185,9 @@ void MainWindow::on_actionStart_triggered()
     QObject::connect(mdsm_, &MdSm::gotMdItem, this, &MainWindow::onGotMdItem, Qt::QueuedConnection);
     mdsm_thread_->start();
 
-    //更新ui
+    //更新ui,接收数据中不要出现模态对话框=
     ui->actionStart->setEnabled(false);
+    ui->actionConfig->setEnabled(false);
     ui->actionStop->setEnabled(true);
 }
 
@@ -215,6 +217,7 @@ void MainWindow::on_actionStop_triggered()
 
     //更新ui
     ui->actionStart->setEnabled(true);
+    ui->actionConfig->setEnabled(true);
     ui->actionStop->setEnabled(false);
 }
 
