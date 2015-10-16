@@ -11,6 +11,8 @@
 #include "tdsm.h"
 #include "ctpcmd.h"
 #include <QCloseEvent>
+#include "ApiStruct.h"
+#include "tickform.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -20,12 +22,24 @@ MainWindow::MainWindow(QWidget* parent)
     ui->setupUi(this);
     ui->splitter->setStretchFactor(0, 3);
     ui->splitter->setStretchFactor(1, 1);
+
+    //设置cmdmgr
     cmdmgr_->setInterval(100);
     QObject::connect(cmdmgr_, &CtpCmdMgr::onInfo, this, &MainWindow::onInfo, Qt::QueuedConnection);
     cmdmgr_->start();
 
+    //设置trayicon
     this->createActions();
     this->createTrayIcon();
+
+    //设置列=
+    ids_col_ = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
+        "LastPrice", "Volume", "OpenInterest",
+        "BidPrice1", "BidVolume1", "AskPrice1", "AskVolume1" };
+    this->ui->tableWidget->setColumnCount(ids_col_.length());
+    for (int i = 0; i < ids_col_.length(); i++) {
+        ui->tableWidget->setHorizontalHeaderItem(i, new QTableWidgetItem(ids_col_.at(i)));
+    }
 }
 
 MainWindow::~MainWindow()
@@ -42,13 +56,10 @@ void MainWindow::onMdSmStateChanged(int state)
         mdsm_thread_ = nullptr;
         mdsm_ = nullptr;
     }
-
     if (state == MDSM_CONNECTED) {
     }
-
     if (state == MDSM_DISCONNECTED) {
     }
-
     if (state == MDSM_LOGINED) {
         //开始用tdapi查询合约列表=
         if (tdsm_ != nullptr) {
@@ -64,9 +75,9 @@ void MainWindow::onMdSmStateChanged(int state)
         QObject::connect(tdsm_thread_, &QThread::started, tdsm_, &TdSm::start, Qt::QueuedConnection);
         QObject::connect(tdsm_thread_, &QThread::finished, tdsm_, &TdSm::deleteLater, Qt::QueuedConnection);
         QObject::connect(tdsm_thread_, &QThread::finished, tdsm_thread_, &QThread::deleteLater, Qt::QueuedConnection);
-        QObject::connect(tdsm_, &TdSm::onStatusChanged, this, &MainWindow::onTdSmStateChanged, Qt::QueuedConnection);
-        QObject::connect(tdsm_, &TdSm::onInfo, this, &MainWindow::onInfo, Qt::QueuedConnection);
-        QObject::connect(tdsm_, &TdSm::onGotIds, this, &MainWindow::onGotIds, Qt::QueuedConnection);
+        QObject::connect(tdsm_, &TdSm::statusChanged, this, &MainWindow::onTdSmStateChanged, Qt::QueuedConnection);
+        QObject::connect(tdsm_, &TdSm::info, this, &MainWindow::onInfo, Qt::QueuedConnection);
+        QObject::connect(tdsm_, &TdSm::gotIds, this, &MainWindow::onGotIds, Qt::QueuedConnection);
 
         tdsm_thread_->start();
     }
@@ -84,7 +95,7 @@ void MainWindow::onGotIds(QStringList ids)
     //退出td
     tdsm_->logout();
 
-    //设置行=
+    //设置行，按排序后合约来，一个合约一行=
     ids_row_.clear();
     QStringList sorted_ids = ids;
     sorted_ids.sort();
@@ -111,13 +122,10 @@ void MainWindow::onTdSmStateChanged(int state)
 
     if (state == TDSM_LOGINED) {
     }
-
     if (state == TDSM_CONNECTED) {
     }
-
     if (state == TDSM_DISCONNECTED) {
     }
-
     if (state == TDSM_LOGOUTED) {
         tdsm_->stop();
     }
@@ -140,6 +148,7 @@ void MainWindow::on_actionConfig_triggered()
 
 void MainWindow::on_actionStart_triggered()
 {
+    // input password
     LoginDialog dlg;
     if (dlg.exec()) {
         password_ = dlg.getPassword();
@@ -147,6 +156,8 @@ void MainWindow::on_actionStart_triggered()
     else {
         return;
     }
+
+    // check setting
     loadCfg();
     if (userName_.length() == 0 || password_.length() == 0 || brokerId_.length() == 0
         || frontMd_.length() == 0 || frontTd_.length() == 0) {
@@ -154,22 +165,23 @@ void MainWindow::on_actionStart_triggered()
         return;
     }
 
+    // check
     if (mdsm_ != nullptr) {
         qFatal("mdsm_!= nullptr");
     }
 
+    // init mdsm
     mdsm_ = new MdSm;
     mdsm_thread_ = new QThread;
     mdsm_->moveToThread(mdsm_thread_);
-
-    //居然要传一个/结尾
+    //居然要传一个/结尾=
     mdsm_->init(userName_, password_, brokerId_, frontMd_, QDir::temp().absoluteFilePath("hdsrv/mdapi/"));
     QObject::connect(mdsm_thread_, &QThread::started, mdsm_, &MdSm::start, Qt::QueuedConnection);
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_, &MdSm::deleteLater, Qt::QueuedConnection);
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_thread_, &QThread::deleteLater, Qt::QueuedConnection);
-    QObject::connect(mdsm_, &MdSm::onStatusChanged, this, &MainWindow::onMdSmStateChanged, Qt::QueuedConnection);
-    QObject::connect(mdsm_, &MdSm::onInfo, this, &MainWindow::onInfo, Qt::QueuedConnection);
-    QObject::connect(mdsm_, &MdSm::onGotMd, this, &MainWindow::onGotMd, Qt::QueuedConnection);
+    QObject::connect(mdsm_, &MdSm::statusChanged, this, &MainWindow::onMdSmStateChanged, Qt::QueuedConnection);
+    QObject::connect(mdsm_, &MdSm::info, this, &MainWindow::onInfo, Qt::QueuedConnection);
+    QObject::connect(mdsm_, &MdSm::gotMdItem, this, &MainWindow::onGotMdItem, Qt::QueuedConnection);
     mdsm_thread_->start();
 
     //更新ui
@@ -193,27 +205,41 @@ void MainWindow::loadCfg()
 
 void MainWindow::on_actionStop_triggered()
 {
-    if (tdsm_)
+    if (tdsm_){
         tdsm_->stop();
+    }
 
-    if (mdsm_)
+    if (mdsm_){
         mdsm_->stop();
+    }
 
     //更新ui
     ui->actionStart->setEnabled(true);
     ui->actionStop->setEnabled(false);
 }
 
-void MainWindow::onGotMd(QVariantMap mdItem)
+void MainWindow::onGotMdItem(void* p)
 {
+    auto mdf = (DepthMarketDataField*)p;
+
+    QVariantMap mdItem;
+    mdItem.insert("InstrumentID", mdf->InstrumentID);
+    mdItem.insert("TradingDay", mdf->TradingDay);
+    mdItem.insert("UpdateTime", mdf->UpdateTime);
+    mdItem.insert("UpdateMillisec", mdf->UpdateMillisec);
+    mdItem.insert("LastPrice", mdf->LastPrice);
+    mdItem.insert("Volume", mdf->Volume);
+    mdItem.insert("OpenInterest", mdf->OpenInterest);
+    mdItem.insert("BidPrice1", mdf->BidPrice1);
+    mdItem.insert("BidVolume1", mdf->BidVolume1);
+    mdItem.insert("AskPrice1", mdf->AskPrice1);
+    mdItem.insert("AskVolume1", mdf->AskVolume1);
+
+    //根据id找到对应的行，然后用列的text来在map里面取值设置到item里面=
     QString id = mdItem.value("InstrumentID").toString();
     int row = ids_row_.value(id);
-
-    QStringList colList = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
-        "LastPrice", "Volume", "OpenInterest",
-        "BidPrice1", "BidVolume1", "AskPrice1", "AskVolume1" };
-    for (int i = 0; i < colList.count(); i++) {
-        QVariant raw_val = mdItem.value(colList.at(i));
+    for (int i = 0; i < ids_col_.count(); i++) {
+        QVariant raw_val = mdItem.value(ids_col_.at(i));
         QString str_val = raw_val.toString();
         if (raw_val.type() == QMetaType::Double || raw_val.type() == QMetaType::Float) {
             str_val = QString().sprintf("%6.1f", raw_val.toDouble());
@@ -267,7 +293,7 @@ void MainWindow::createTrayIcon()
     trayIcon->setToolTip("mdsrv");
 
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-        this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
+        this, SLOT(onTrayIconActivated(QSystemTrayIcon::ActivationReason)));
 
     trayIcon->setVisible(true);
     trayIcon->show();
@@ -284,12 +310,12 @@ void MainWindow::on_actionQuit_triggered()
     qApp->quit();
 }
 
-void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
+void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::Trigger:
     case QSystemTrayIcon::DoubleClick:
-        if(!this->isVisible())
+        if (!this->isVisible())
             this->showNormal();
         break;
     case QSystemTrayIcon::MiddleClick:
@@ -297,4 +323,13 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
     default:
         ;
     }
+}
+
+//显示详细数据=
+void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
+{
+    TickForm* form = new TickForm();
+    form->setWindowFlags(Qt::Window);
+    form->Init(mdsm_,ui->tableWidget->item(row,0)->text());
+    form->show();
 }

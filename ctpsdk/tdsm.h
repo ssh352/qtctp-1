@@ -36,10 +36,10 @@ protected:
     QString idFilters(){return ids_;}
 
 signals:
-    void onStatusChanged(int state);
-    void onInfo(QString msg);
-    void onGotIds(QStringList ids);
-    void onRunCmd(void* cmd);
+    void statusChanged(int state);
+    void info(QString msg);
+    void gotIds(QStringList ids);
+    void runCmd(void* cmd);
 
 private:
     QString name_;

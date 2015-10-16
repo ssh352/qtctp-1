@@ -26,7 +26,7 @@ public slots:
     void onTdSmStateChanged(int state);
     void onInfo(QString msg);
     void onGotIds(QStringList ids);
-    void onGotMd(QVariantMap item);
+    void onGotMdItem(void* item);
 
 private slots:
     void on_actionAbout_triggered();
@@ -34,7 +34,9 @@ private slots:
     void on_actionStart_triggered();
     void on_actionStop_triggered();
     void on_actionQuit_triggered();
-    void iconActivated(QSystemTrayIcon::ActivationReason reason);
+    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
+
+    void on_tableWidget_cellDoubleClicked(int row, int column);
 
 private:
     void loadCfg();
@@ -51,6 +53,7 @@ private:
     QString userName_,password_,brokerId_,frontTd_,frontMd_,subscribleIds_;
     CtpCmdMgr *cmdmgr_;
     QMap<QString,int> ids_row_;
+    QStringList ids_col_;
 
 private:
     QAction *minimizeAction;

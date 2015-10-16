@@ -2,10 +2,11 @@
 #define MdSm_H
 
 #include <QObject>
-#include <QVariantMap>
+#include <QMap>
 
 class MdApi;
-class QLevelDB;
+class MdSmSpi;
+class MdRingBuffer;
 
 enum {
     MDSM_DISCONNECTED = 1,
@@ -15,7 +16,6 @@ enum {
     MDSM_STOPPED
 };
 
-class MdSmSpi;
 class MdSm : public QObject {
     Q_OBJECT
 public:
@@ -27,6 +27,9 @@ public:
     void start();
     void stop();
     void subscrible(QStringList ids);
+    int getMdItemHead(QString id);
+    void* getMdItem(QString id, int index);
+    int ringBufferLen() { return ringbuffer_len; }
     static QString version();
 
 protected:
@@ -34,15 +37,17 @@ protected:
     QString brokerId() { return brokerId_; }
     QString userId() { return name_; }
     QString password() { return pwd_; }
-    void initDb();
-    void closeDb();
-    void saveMd(QVariantMap mdItem);
+
+private:
+    void initRb(QStringList ids);
+    void freeRb();
+    void* saveRb(void* mdItem, int& index);
 
 signals:
-    void onStatusChanged(int state);
-    void onInfo(QString msg);
-    void onRunCmd(void* cmd);
-    void onGotMd(QVariantMap mdItem);
+    void statusChanged(int state);
+    void info(QString msg);
+    void runCmd(void* cmd);
+    void gotMdItem(void* mdItem, int indexRb);
 
 private:
     QString name_;
@@ -52,7 +57,8 @@ private:
     QString flowPath_;
     MdApi* mdapi_ = nullptr;
     MdSmSpi* mdspi_ = nullptr;
-    QLevelDB* db_=nullptr;
+    QMap<QString, MdRingBuffer*> rbs_;
+    const int ringbuffer_len = 256;
 
     friend MdSmSpi;
 };

@@ -15,46 +15,46 @@ public:
 private:
     void OnFrontConnected() override
     {
-        emit sm()->onInfo("TdSmSpi::OnFrontConnected");
-        emit sm()->onStatusChanged(TDSM_CONNECTED);
-        emit sm()->onRunCmd(new CmdTdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
+        emit sm()->info("TdSmSpi::OnFrontConnected");
+        emit sm()->statusChanged(TDSM_CONNECTED);
+        emit sm()->runCmd(new CmdTdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
 
     // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
     void OnFrontDisconnected(int nReason) override
     {
-        emit sm()->onInfo("TdSmSpi::OnFrontDisconnected");
-        emit sm()->onStatusChanged(TDSM_DISCONNECTED);
+        emit sm()->info("TdSmSpi::OnFrontDisconnected");
+        emit sm()->statusChanged(TDSM_DISCONNECTED);
 
         resetData();
     }
 
     void OnHeartBeatWarning(int nTimeLapse) override
     {
-        emit sm()->onInfo("TdSmSpi::OnHeartBeatWarning");
+        emit sm()->info("TdSmSpi::OnHeartBeatWarning");
     }
 
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->onInfo("TdSmSpi::OnRspUserLogin");
+        emit sm()->info("TdSmSpi::OnRspUserLogin");
         if (bIsLast && !isErrorRsp(pRspInfo, nRequestID)) {
-            emit sm()->onStatusChanged(TDSM_LOGINED);
-            emit sm()->onRunCmd(new CmdTdQueryInstrument());
+            emit sm()->statusChanged(TDSM_LOGINED);
+            emit sm()->runCmd(new CmdTdQueryInstrument());
         }
     }
 
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->onInfo("TdSmSpi::OnRspUserLogout");
+        emit sm()->info("TdSmSpi::OnRspUserLogout");
         if (!isErrorRsp(pRspInfo, nRequestID) && bIsLast) {
-            emit sm()->onStatusChanged(TDSM_LOGOUTED);
+            emit sm()->statusChanged(TDSM_LOGOUTED);
         }
     }
 
     void OnRspError(RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->onInfo(QString().sprintf("TdSmSpi::OnRspError,reqId=%d", nRequestID));
+        emit sm()->info(QString().sprintf("TdSmSpi::OnRspError,reqId=%d", nRequestID));
     }
 
     // 可能有多次回调
@@ -73,7 +73,7 @@ private:
                 for (int i = 0; i < idFilters_.length(); i++) {
                     filter = idFilters_.at(i);
                     if (low_iid.startsWith(filter)) {
-                        emit sm()->onInfo(QString().sprintf("got id:%s", low_iid.toUtf8().constData()));
+                        emit sm()->info(QString().sprintf("got id:%s", low_iid.toUtf8().constData()));
                         ids_ << iid;
                         break;
                     }
@@ -82,9 +82,9 @@ private:
         }
 
         if (bIsLast) {
-            emit sm()->onInfo(QString().sprintf("total got ids:%d", ids_.length()));
+            emit sm()->info(QString().sprintf("total got ids:%d", ids_.length()));
             if (ids_.length()) {
-                emit sm()->onGotIds(ids_);
+                emit sm()->gotIds(ids_);
             }
         }
     }
@@ -93,7 +93,7 @@ public:
     bool isErrorRsp(RspInfoField* pRspInfo, int reqId)
     {
         if (pRspInfo && pRspInfo->ErrorID != 0) {
-            emit sm()->onInfo(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
+            emit sm()->info(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
             return true;
         }
         return false;
@@ -125,8 +125,6 @@ TdSm::TdSm(QObject* parent)
 
 TdSm::~TdSm()
 {
-    delete tdspi_;
-    tdspi_ = nullptr;
 }
 
 void TdSm::init(QString name, QString pwd, QString brokerId, QString front, QString flowPath, QString ids)
@@ -141,7 +139,7 @@ void TdSm::init(QString name, QString pwd, QString brokerId, QString front, QStr
 
 void TdSm::start()
 {
-    emit this->onInfo("TdSm::start");
+    emit this->info("TdSm::start");
     if (tdapi_ != nullptr) {
         qFatal("tdapi_!=nullptr");
         return;
@@ -151,7 +149,7 @@ void TdSm::start()
     dir.mkpath(flowPath_);
     tdapi_ = TraderApi::CreateTraderApi(flowPath_.toStdString().c_str());
     CtpCmdMgr::instance()->setTdApi(tdapi_);
-    QObject::connect(this, &TdSm::onRunCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    QObject::connect(this, &TdSm::runCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
     tdapi_->RegisterSpi(tdspi_);
     tdapi_->RegisterFront((char*)qPrintable(front_));
     tdapi_->SubscribePublicTopic(TERT_QUICK);
@@ -159,26 +157,28 @@ void TdSm::start()
     tdapi_->Init();
     tdapi_->Join();
     CtpCmdMgr::instance()->setTdApi(nullptr);
-    emit this->onInfo("tdapi::join end!!!");
-    emit this->onStatusChanged(TDSM_STOPPED);
+    emit this->info("tdapi::join end!!!");
+    emit this->statusChanged(TDSM_STOPPED);
+    tdapi_ = nullptr;
+    delete tdspi_;
+    tdspi_ = nullptr;
 }
 
 void TdSm::logout()
 {
-    emit this->onInfo("TdSm::logout");
-    emit this->onRunCmd(new CmdTdLogout(userId(), brokerId()));
+    emit this->info("TdSm::logout");
+    emit this->runCmd(new CmdTdLogout(userId(), brokerId()));
 }
 
 void TdSm::stop()
 {
-    emit this->onInfo("TdSm::stop");
+    emit this->info("TdSm::stop");
     if (tdapi_ == nullptr) {
         qFatal("tdapi_==nullptr");
         return;
     }
     tdapi_->RegisterSpi(nullptr);
     tdapi_->Release();
-    tdapi_ = nullptr;
 }
 
 QString TdSm::version()

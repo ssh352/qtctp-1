@@ -3,7 +3,71 @@
 #include "MdApi.h"
 #include "utils.h"
 #include "ctpcmd.h"
-#include "qleveldb.h"
+#include <QMap>
+#include <atomic>
+
+//每个合约在内存中使用ringbuffer保留(256)个tick，ui上要延迟1分钟使用请自己复制=
+class MdRingBuffer {
+public:
+    void init(int item_len, int item_count)
+    {
+        int buflen = item_len * item_count;
+        if (buflen > 4 * 1024 * 1024) {
+            qFatal("ringbuffer > 4M");
+            return;
+        }
+        buffer_ = new char[item_len * item_count];
+        items_ = new void* [item_count];
+        for (int i = 0; i < item_count; i++) {
+            items_[i] = 0;
+        }
+        head_ = -1;
+        item_count_ = item_count;
+        item_len_ = item_len;
+    }
+
+    void free()
+    {
+        delete[] buffer_;
+        delete[] items_;
+    }
+
+    //需要判断返回值哦=
+    void* get(int index)
+    {
+        if (index < 0)
+            return nullptr;
+
+        return items_[index % item_count_];
+    }
+
+    int head()
+    {
+        //原子操作=
+        return head_;
+    }
+
+    void* put(void* item, int& index)
+    {
+        index = head_ + 1;
+        index = index % item_count_;
+
+        char* buf = buffer_ + index * item_len_;
+        items_[index] = buf;
+        memcpy(buf, item, item_len_);
+        //原子操作=
+        head_ = index;
+
+        return buf;
+    }
+
+private:
+    int item_count_;
+    int item_len_;
+    void** items_;
+    char* buffer_;
+    std::atomic_int32_t head_;
+};
 
 ///////////
 class MdSmSpi : public MdSpi {
@@ -16,9 +80,9 @@ public:
 private:
     void OnFrontConnected() override
     {
-        emit sm()->onInfo("MdSmSpi::OnFrontConnected");
-        emit sm()->onStatusChanged(MDSM_CONNECTED);
-        emit sm()->onRunCmd(new CmdMdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
+        emit sm()->info("MdSmSpi::OnFrontConnected");
+        emit sm()->statusChanged(MDSM_CONNECTED);
+        emit sm()->runCmd(new CmdMdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
 
     // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据
@@ -26,20 +90,20 @@ private:
     void OnFrontDisconnected(int nReason) override
     {
         resetData();
-        emit sm()->onInfo("MdSmSpi::OnFrontDisconnected");
-        emit sm()->onStatusChanged(MDSM_DISCONNECTED);
+        emit sm()->info("MdSmSpi::OnFrontDisconnected");
+        emit sm()->statusChanged(MDSM_DISCONNECTED);
     }
 
     void OnHeartBeatWarning(int nTimeLapse) override
     {
-        emit sm()->onInfo("MdSmSpi::OnHeartBeatWarning");
+        emit sm()->info("MdSmSpi::OnHeartBeatWarning");
     }
 
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->onInfo("MdSmSpi::OnRspUserLogin");
+        emit sm()->info("MdSmSpi::OnRspUserLogin");
         if (!isErrorRsp(pRspInfo, nRequestID) && bIsLast) {
-            emit sm()->onStatusChanged(MDSM_LOGINED);
+            emit sm()->statusChanged(MDSM_LOGINED);
         }
     }
 
@@ -50,7 +114,7 @@ private:
 
     void OnRspError(RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->onInfo(QString().sprintf("MdSmSpi::OnRspError,reqId=%d", nRequestID));
+        emit sm()->info(QString().sprintf("MdSmSpi::OnRspError,reqId=%d", nRequestID));
     }
 
     // 订阅成功了也会调用,目前是不管啥都返回订阅成功
@@ -59,11 +123,11 @@ private:
         if (!isErrorRsp(pRspInfo, nRequestID) && pSpecificInstrument) {
             QString iid = pSpecificInstrument->InstrumentID;
             got_ids_ << iid;
-            emit sm()->onInfo(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
+            emit sm()->info(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
         }
 
         if (bIsLast && got_ids_.length()) {
-            emit sm()->onStatusChanged(MDSM_RECVING);
+            emit sm()->statusChanged(MDSM_RECVING);
         }
     }
 
@@ -73,29 +137,19 @@ private:
 
     void OnRtnDepthMarketData(DepthMarketDataField* pDepthMarketData) override
     {
-        DepthMarketDataField* mdf = pDepthMarketData;
-
-        QVariantMap item;
-        item.insert("InstrumentID", mdf->InstrumentID);
-        item.insert("TradingDay", mdf->TradingDay);
-        item.insert("UpdateTime", mdf->UpdateTime);
-        item.insert("UpdateMillisec", mdf->UpdateMillisec);
-        item.insert("LastPrice", mdf->LastPrice);
-        item.insert("Volume", mdf->Volume);
-        item.insert("OpenInterest", mdf->OpenInterest);
-        item.insert("BidPrice1", mdf->BidPrice1);
-        item.insert("BidVolume1", mdf->BidVolume1);
-        item.insert("AskPrice1", mdf->AskPrice1);
-        item.insert("AskVolume1", mdf->AskVolume1);
-        emit sm()->onGotMd(item);
-        sm()->saveMd(item);
+        int index = -1;
+        void* item = sm()->saveRb(pDepthMarketData, index);
+        emit sm()->gotMdItem(item, index);
     }
 
 public:
     bool isErrorRsp(RspInfoField* pRspInfo, int reqId)
     {
         if (pRspInfo && pRspInfo->ErrorID != 0) {
-            emit sm()->onInfo(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
+            emit sm()->info(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s",
+                reqId,
+                pRspInfo->ErrorID,
+                gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
             return true;
         }
         return false;
@@ -114,7 +168,6 @@ public:
 private:
     MdSm* sm_;
     QStringList got_ids_;
-    QLevelDB db_;
 };
 
 ///////////
@@ -126,8 +179,6 @@ MdSm::MdSm(QObject* parent)
 
 MdSm::~MdSm()
 {
-    delete mdspi_;
-    mdspi_ = nullptr;
 }
 
 void MdSm::init(QString name, QString pwd, QString brokerId, QString front, QString flowPath)
@@ -141,7 +192,7 @@ void MdSm::init(QString name, QString pwd, QString brokerId, QString front, QStr
 
 void MdSm::start()
 {
-    emit this->onInfo("MdSm::start");
+    emit this->info("MdSm::start");
     if (mdapi_ != nullptr) {
         qFatal("mdapi_!=nullptr");
         return;
@@ -151,34 +202,37 @@ void MdSm::start()
     dir.mkpath(flowPath_);
     mdapi_ = MdApi::CreateMdApi(flowPath_.toStdString().c_str());
     CtpCmdMgr::instance()->setMdApi(mdapi_);
-    QObject::connect(this, &MdSm::onRunCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    QObject::connect(this, &MdSm::runCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
     mdapi_->RegisterSpi(mdspi_);
     mdapi_->RegisterFront((char*)qPrintable(front_));
     mdapi_->Init();
-    initDb();
     mdapi_->Join();
     CtpCmdMgr::instance()->setMdApi(nullptr);
-    emit this->onInfo("mdapi::join end!!!");
-    emit this->onStatusChanged(MDSM_STOPPED);
+    emit this->info("mdapi::join end!!!");
+    emit this->statusChanged(MDSM_STOPPED);
+    mdapi_ = nullptr;
+    delete mdspi_;
+    mdspi_ = nullptr;
+    freeRb();
 }
 
 void MdSm::stop()
 {
-    emit this->onInfo("MdSm::stop");
+    emit this->info("MdSm::stop");
     if (mdapi_ == nullptr) {
         qFatal("mdapi_==nullptr");
         return;
     }
+
     mdapi_->RegisterSpi(nullptr);
     mdapi_->Release();
-    mdapi_ = nullptr;
-    closeDb();
 }
 
 void MdSm::subscrible(QStringList ids)
 {
-    emit this->onInfo("MdSm::subscrible");
-    emit this->onRunCmd(new CmdMdSubscrible(ids));
+    initRb(ids);
+    emit this->info("MdSm::subscrible");
+    emit this->runCmd(new CmdMdSubscrible(ids));
 }
 
 QString MdSm::version()
@@ -186,28 +240,57 @@ QString MdSm::version()
     return MdApi::GetApiVersion();
 }
 
-void MdSm::initDb()
-{
-    db_ = new QLevelDB;
-    db_->setFilename(QDir::home().absoluteFilePath("mddata.db"));
-    db_->open();
+void MdSm::initRb(QStringList ids){
+    for(int i=0;i<ids.count();i++){
+        QString id = ids.at(i);
+        MdRingBuffer* rb = new MdRingBuffer;
+        rb->init(sizeof(DepthMarketDataField), ringbuffer_len);
+        rbs_.insert(id, rb);
+    }
 }
 
-void MdSm::closeDb()
+void MdSm::freeRb()
 {
-    db_->close();
-    delete db_;
-    db_ = nullptr;
+    auto rb_list = rbs_.values();
+    for (int i = 0; i < rb_list.length(); i++) {
+        MdRingBuffer* rb = rb_list.at(i);
+        rb->free();
+        delete rb;
+    }
+    rbs_.clear();
 }
 
-void MdSm::saveMd(QVariantMap mdItem)
+void* MdSm::saveRb(void* mdItem, int& index)
 {
-    //key还可以不唯一我晕死=
-    QString key;
-    QString p1 = mdItem.value("InstrumentID").toString();
-    QString p2 = mdItem.value("TradingDay").toString();
-    QString p3 = mdItem.value("UpdateTime").toString();
-    QString p4 = mdItem.value("UpdateMillisec").toString();
-    key = p1 + "=" + p2 + "=" + p3 + "=" + p4;
-    db_->put(key, mdItem);
+    DepthMarketDataField* mdf = (DepthMarketDataField*)mdItem;
+    QString id = mdf->InstrumentID;
+    MdRingBuffer* rb = rbs_.value(id);
+    if (rb == nullptr) {
+        //预先分配避免多线程锁的问题,这里就不考虑这种情况了=
+        //rb = new MdRingBuffer;
+        //rb->init(sizeof(DepthMarketDataField), ringbuffer_len);
+        //rbs_.insert(id, rb);
+        qFatal("rb == nullptr");
+    }
+
+    return rb->put(mdItem, index);
+}
+
+void* MdSm::getMdItem(QString id, int index)
+{
+    MdRingBuffer* rb = rbs_.value(id);
+    if (!rb) {
+        return nullptr;
+    }
+
+    return rb->get(index);
+}
+
+int MdSm::getMdItemHead(QString id){
+    MdRingBuffer* rb = rbs_.value(id);
+    if (!rb) {
+        return -1;
+    }
+
+    return rb->head();
 }

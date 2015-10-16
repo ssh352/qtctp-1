@@ -17,15 +17,18 @@ win32-msvc*:QMAKE_CXXFLAGS += -wd4819
 SOURCES += main.cpp\
     mainwindow.cpp \
     configdialog.cpp \
-    logindialog.cpp
+    logindialog.cpp \
+    tickform.cpp
 
 HEADERS  += mainwindow.h \
     configdialog.h \
-    logindialog.h
+    logindialog.h \
+    tickform.h
 
 FORMS    += mainwindow.ui \
     configdialog.ui \
-    logindialog.ui
+    logindialog.ui \
+    tickform.ui
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)

@@ -36,61 +36,6 @@
        <property name="rowCount">
         <number>0</number>
        </property>
-       <column>
-        <property name="text">
-         <string>InstrumentID</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>TradingDay</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>UpdateTime</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>UpdateMillisec</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>LastPrice</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Volume</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>OpenInterest</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>BidPrice1</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>BidVolume1</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>AskPrice1</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>AskVolume1</string>
-        </property>
-       </column>
       </widget>
       <widget class="QListWidget" name="listWidget"/>
      </widget>
