@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QVariantMap>
+#include <QSystemTrayIcon>
 
 namespace Ui {
 class MainWindow;
@@ -32,10 +33,14 @@ private slots:
     void on_actionConfig_triggered();
     void on_actionStart_triggered();
     void on_actionStop_triggered();
+    void on_actionQuit_triggered();
+    void iconActivated(QSystemTrayIcon::ActivationReason reason);
 
 private:
     void loadCfg();
     void closeEvent (QCloseEvent *event) override;
+    void createTrayIcon();
+    void createActions();
 
 private:
     Ui::MainWindow* ui;
@@ -47,6 +52,15 @@ private:
     CtpCmdMgr *cmdmgr_;
     QMap<QString,int> ids_row_;
 
+private:
+    QAction *minimizeAction;
+    QAction *maximizeAction;
+    QAction *restoreAction;
+    QAction *quitAction;
+
+    QSystemTrayIcon *trayIcon;
+    QMenu *trayIconMenu;
+    QIcon icon_;
 };
 
 #endif // MAINWINDOW_H

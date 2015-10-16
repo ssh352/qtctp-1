@@ -17,7 +17,7 @@ ConfigDialog::~ConfigDialog()
 
 void ConfigDialog::Save(){
     QLevelDB db;
-    db.setFilename(QDir::home().absoluteFilePath("hdcfg.db"));
+    db.setFilename(QDir::home().absoluteFilePath("mdcfg.db"));
     db.open();
     QVariantMap cfg;
     cfg.insert("userName",ui->userName->text());
@@ -31,7 +31,7 @@ void ConfigDialog::Save(){
 
 void ConfigDialog::Load(){
     QLevelDB db;
-    db.setFilename(QDir::home().absoluteFilePath("hdcfg.db"));
+    db.setFilename(QDir::home().absoluteFilePath("mdcfg.db"));
     db.open();
     QVariantMap cfg = db.get("cfg").toMap();
     ui->userName->setText(cfg.value("userName","").toString());

@@ -23,6 +23,9 @@ MainWindow::MainWindow(QWidget* parent)
     cmdmgr_->setInterval(100);
     QObject::connect(cmdmgr_, &CtpCmdMgr::onInfo, this, &MainWindow::onInfo, Qt::QueuedConnection);
     cmdmgr_->start();
+
+    this->createActions();
+    this->createTrayIcon();
 }
 
 MainWindow::~MainWindow()
@@ -177,7 +180,7 @@ void MainWindow::on_actionStart_triggered()
 void MainWindow::loadCfg()
 {
     QLevelDB db;
-    db.setFilename(QDir::home().absoluteFilePath("hdcfg.db"));
+    db.setFilename(QDir::home().absoluteFilePath("mdcfg.db"));
     db.open();
     QVariantMap cfg = db.get("cfg").toMap();
     userName_ = cfg.value("userName", "").toString();
@@ -207,13 +210,13 @@ void MainWindow::onGotMd(QVariantMap mdItem)
     int row = ids_row_.value(id);
 
     QStringList colList = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
-        "LastPrice", "Volume","OpenInterest",
+        "LastPrice", "Volume", "OpenInterest",
         "BidPrice1", "BidVolume1", "AskPrice1", "AskVolume1" };
     for (int i = 0; i < colList.count(); i++) {
         QVariant raw_val = mdItem.value(colList.at(i));
         QString str_val = raw_val.toString();
-        if (raw_val.type() == QMetaType::Double || raw_val.type()==QMetaType::Float){
-            str_val = QString().sprintf("%6.1f",raw_val.toDouble());
+        if (raw_val.type() == QMetaType::Double || raw_val.type() == QMetaType::Float) {
+            str_val = QString().sprintf("%6.1f", raw_val.toDouble());
         }
 
         QTableWidgetItem* item = new QTableWidgetItem(str_val);
@@ -221,11 +224,77 @@ void MainWindow::onGotMd(QVariantMap mdItem)
     }
 }
 
-void MainWindow::closeEvent(QCloseEvent *event){
+void MainWindow::closeEvent(QCloseEvent* event)
+{
     if (mdsm_ || tdsm_) {
-        onInfo("请先停止接收数据=");
+        this->hide();
         event->ignore();
-    }else{
+    }
+    else {
         event->accept();
+    }
+}
+
+void MainWindow::createActions()
+{
+    minimizeAction = new QAction(tr("Mi&nimize"), this);
+    connect(minimizeAction, SIGNAL(triggered()), this, SLOT(hide()));
+
+    maximizeAction = new QAction(tr("Ma&ximize"), this);
+    connect(maximizeAction, SIGNAL(triggered()), this, SLOT(showMaximized()));
+
+    restoreAction = new QAction(tr("&Restore"), this);
+    connect(restoreAction, SIGNAL(triggered()), this, SLOT(showNormal()));
+
+    quitAction = new QAction(tr("&Quit"), this);
+    connect(quitAction, SIGNAL(triggered()), this, SLOT(on_actionQuit_triggered()));
+}
+
+void MainWindow::createTrayIcon()
+{
+    trayIconMenu = new QMenu(this);
+    trayIconMenu->addAction(minimizeAction);
+    trayIconMenu->addAction(maximizeAction);
+    trayIconMenu->addAction(restoreAction);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(quitAction);
+
+    trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setContextMenu(trayIconMenu);
+    icon_ = QIcon(":/images/heart.png");
+    trayIcon->setIcon(icon_);
+    setWindowIcon(icon_);
+    trayIcon->setToolTip("mdsrv");
+
+    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+        this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
+
+    trayIcon->setVisible(true);
+    trayIcon->show();
+}
+
+void MainWindow::on_actionQuit_triggered()
+{
+    if (mdsm_ || tdsm_) {
+        this->showNormal();
+        onInfo("请先停止接收数据=");
+        return;
+    }
+
+    qApp->quit();
+}
+
+void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    switch (reason) {
+    case QSystemTrayIcon::Trigger:
+    case QSystemTrayIcon::DoubleClick:
+        if(!this->isVisible())
+            this->showNormal();
+        break;
+    case QSystemTrayIcon::MiddleClick:
+        break;
+    default:
+        ;
     }
 }

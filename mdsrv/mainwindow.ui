@@ -114,6 +114,8 @@
     <addaction name="actionStop"/>
     <addaction name="separator"/>
     <addaction name="actionConfig"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -148,6 +150,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>api version</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>quit</string>
    </property>
   </action>
  </widget>

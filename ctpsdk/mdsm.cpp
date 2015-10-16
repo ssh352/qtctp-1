@@ -3,6 +3,7 @@
 #include "MdApi.h"
 #include "utils.h"
 #include "ctpcmd.h"
+#include "qleveldb.h"
 
 ///////////
 class MdSmSpi : public MdSpi {
@@ -75,18 +76,19 @@ private:
         DepthMarketDataField* mdf = pDepthMarketData;
 
         QVariantMap item;
-        item.insert("InstrumentID",mdf->InstrumentID);
-        item.insert("TradingDay",mdf->TradingDay);
-        item.insert("UpdateTime",mdf->UpdateTime);
-        item.insert("UpdateMillisec",mdf->UpdateMillisec);
-        item.insert("LastPrice",mdf->LastPrice);
-        item.insert("Volume",mdf->Volume);
-        item.insert("OpenInterest",mdf->OpenInterest);
-        item.insert("BidPrice1",mdf->BidPrice1);
-        item.insert("BidVolume1",mdf->BidVolume1);
-        item.insert("AskPrice1",mdf->AskPrice1);
-        item.insert("AskVolume1",mdf->AskVolume1);
+        item.insert("InstrumentID", mdf->InstrumentID);
+        item.insert("TradingDay", mdf->TradingDay);
+        item.insert("UpdateTime", mdf->UpdateTime);
+        item.insert("UpdateMillisec", mdf->UpdateMillisec);
+        item.insert("LastPrice", mdf->LastPrice);
+        item.insert("Volume", mdf->Volume);
+        item.insert("OpenInterest", mdf->OpenInterest);
+        item.insert("BidPrice1", mdf->BidPrice1);
+        item.insert("BidVolume1", mdf->BidVolume1);
+        item.insert("AskPrice1", mdf->AskPrice1);
+        item.insert("AskVolume1", mdf->AskVolume1);
         emit sm()->onGotMd(item);
+        sm()->saveMd(item);
     }
 
 public:
@@ -112,6 +114,7 @@ public:
 private:
     MdSm* sm_;
     QStringList got_ids_;
+    QLevelDB db_;
 };
 
 ///////////
@@ -152,6 +155,7 @@ void MdSm::start()
     mdapi_->RegisterSpi(mdspi_);
     mdapi_->RegisterFront((char*)qPrintable(front_));
     mdapi_->Init();
+    initDb();
     mdapi_->Join();
     CtpCmdMgr::instance()->setMdApi(nullptr);
     emit this->onInfo("mdapi::join end!!!");
@@ -168,6 +172,7 @@ void MdSm::stop()
     mdapi_->RegisterSpi(nullptr);
     mdapi_->Release();
     mdapi_ = nullptr;
+    closeDb();
 }
 
 void MdSm::subscrible(QStringList ids)
@@ -176,6 +181,33 @@ void MdSm::subscrible(QStringList ids)
     emit this->onRunCmd(new CmdMdSubscrible(ids));
 }
 
-QString MdSm::version(){
+QString MdSm::version()
+{
     return MdApi::GetApiVersion();
+}
+
+void MdSm::initDb()
+{
+    db_ = new QLevelDB;
+    db_->setFilename(QDir::home().absoluteFilePath("mddata.db"));
+    db_->open();
+}
+
+void MdSm::closeDb()
+{
+    db_->close();
+    delete db_;
+    db_ = nullptr;
+}
+
+void MdSm::saveMd(QVariantMap mdItem)
+{
+    //key还可以不唯一我晕死=
+    QString key;
+    QString p1 = mdItem.value("InstrumentID").toString();
+    QString p2 = mdItem.value("TradingDay").toString();
+    QString p3 = mdItem.value("UpdateTime").toString();
+    QString p4 = mdItem.value("UpdateMillisec").toString();
+    key = p1 + "=" + p2 + "=" + p3 + "=" + p4;
+    db_->put(key, mdItem);
 }

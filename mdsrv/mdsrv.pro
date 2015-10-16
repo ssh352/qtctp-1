@@ -30,3 +30,6 @@ FORMS    += mainwindow.ui \
 include(../ctpsdk.pri)
 include(../leveldb.pri)
 include(../qleveldb.pri)
+
+RESOURCES += \
+    systray.qrc

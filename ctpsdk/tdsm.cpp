@@ -47,7 +47,7 @@ private:
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         emit sm()->onInfo("TdSmSpi::OnRspUserLogout");
-        if (!isErrorRsp(pRspInfo,nRequestID) && bIsLast){
+        if (!isErrorRsp(pRspInfo, nRequestID) && bIsLast) {
             emit sm()->onStatusChanged(TDSM_LOGOUTED);
         }
     }
@@ -166,7 +166,7 @@ void TdSm::start()
 void TdSm::logout()
 {
     emit this->onInfo("TdSm::logout");
-    emit this->onRunCmd(new CmdTdLogout(userId(),brokerId()));
+    emit this->onRunCmd(new CmdTdLogout(userId(), brokerId()));
 }
 
 void TdSm::stop()
@@ -181,6 +181,7 @@ void TdSm::stop()
     tdapi_ = nullptr;
 }
 
-QString TdSm::version(){
+QString TdSm::version()
+{
     return TraderApi::GetApiVersion();
 }

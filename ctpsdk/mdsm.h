@@ -5,6 +5,7 @@
 #include <QVariantMap>
 
 class MdApi;
+class QLevelDB;
 
 enum {
     MDSM_DISCONNECTED = 1,
@@ -33,6 +34,9 @@ protected:
     QString brokerId() { return brokerId_; }
     QString userId() { return name_; }
     QString password() { return pwd_; }
+    void initDb();
+    void closeDb();
+    void saveMd(QVariantMap mdItem);
 
 signals:
     void onStatusChanged(int state);
@@ -48,6 +52,7 @@ private:
     QString flowPath_;
     MdApi* mdapi_ = nullptr;
     MdSmSpi* mdspi_ = nullptr;
+    QLevelDB* db_=nullptr;
 
     friend MdSmSpi;
 };

@@ -34,7 +34,6 @@ protected:
     QString userId(){return name_;}
     QString password(){return pwd_;}
     QString idFilters(){return ids_;}
-    void doStop();
 
 signals:
     void onStatusChanged(int state);
