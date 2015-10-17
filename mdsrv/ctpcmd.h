@@ -14,7 +14,7 @@ public:
     virtual ~CtpCmd() {}
     void runNow()
     {
-        //初始化id，确保在run线程上对id做操作
+        //初始化id，确保在run线程上对id做操作=
         resetId();
         run();
     }

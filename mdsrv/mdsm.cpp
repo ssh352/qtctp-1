@@ -25,7 +25,7 @@ private:
         emit sm()->runCmd(new CmdMdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
 
-    // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据
+    // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据=
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
     void OnFrontDisconnected(int nReason) override
     {
@@ -47,7 +47,7 @@ private:
         }
     }
 
-    // logout在tdapi里面是有效的
+    // logout在tdapi里面是有效的=
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
     }
@@ -57,7 +57,7 @@ private:
         info(QString().sprintf("MdSmSpi::OnRspError,reqId=%d", nRequestID));
     }
 
-    // 订阅成功了也会调用,目前是不管啥都返回订阅成功
+    // 订阅成功了也会调用,目前是不管啥都返回订阅成功=
     void OnRspSubMarketData(SpecificInstrumentField* pSpecificInstrument, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         if (!isErrorRsp(pRspInfo, nRequestID) && pSpecificInstrument) {

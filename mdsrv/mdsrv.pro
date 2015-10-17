@@ -14,11 +14,14 @@ TEMPLATE = app
 win32-msvc*:QMAKE_CXXFLAGS_WARN_ON -= -w34100
 win32-msvc*:QMAKE_CXXFLAGS += -wd4819
 
+INCLUDEPATH += \
+    $$PWD
+
 SOURCES += main.cpp\
-    mainwindow.cpp \
-    configdialog.cpp \
-    logindialog.cpp \
-    tickform.cpp \
+    ui/mainwindow.cpp \
+    ui/configdialog.cpp \
+    ui/logindialog.cpp \
+    ui/tickform.cpp \
     servicemgr.cpp \
     profile.cpp \
     logger.cpp \
@@ -29,10 +32,10 @@ SOURCES += main.cpp\
     ctpcmdmgr.cpp \
     ctpmgr.cpp
 
-HEADERS  += mainwindow.h \
-    configdialog.h \
-    logindialog.h \
-    tickform.h \
+HEADERS  += ui/mainwindow.h \
+    ui/configdialog.h \
+    ui/logindialog.h \
+    ui/tickform.h \
     servicemgr.h \
     profile.h \
     logger.h \
@@ -43,10 +46,10 @@ HEADERS  += mainwindow.h \
     ctpcmdmgr.h \
     ctpmgr.h
 
-FORMS    += mainwindow.ui \
-    configdialog.ui \
-    logindialog.ui \
-    tickform.ui
+FORMS    += ui/mainwindow.ui \
+    ui/configdialog.ui \
+    ui/logindialog.ui \
+    ui/tickform.ui
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)

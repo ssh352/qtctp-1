@@ -23,7 +23,7 @@ private:
         emit sm()->runCmd(new CmdTdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
 
-    // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据
+    // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据=
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
     void OnFrontDisconnected(int nReason) override
     {
@@ -60,7 +60,7 @@ private:
         sm()->info(QString().sprintf("TdSmSpi::OnRspError,reqId=%d", nRequestID));
     }
 
-    // 可能有多次回调
+    // 可能有多次回调=
     void OnRspQryInstrument(InstrumentField* pInstrument, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         QString id;
