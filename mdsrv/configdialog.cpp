@@ -1,7 +1,7 @@
 #include "configdialog.h"
 #include "ui_configdialog.h"
-#include "qleveldb.h"
-#include <QDir>
+#include "servicemgr.h"
+#include "profile.h"
 
 ConfigDialog::ConfigDialog(QWidget *parent) :
     QDialog(parent),
@@ -17,28 +17,19 @@ ConfigDialog::~ConfigDialog()
 }
 
 void ConfigDialog::Save(){
-    QLevelDB db;
-    db.setFilename(QDir::home().absoluteFilePath("mdcfg.db"));
-    db.open();
-    QVariantMap cfg;
-    cfg.insert("userName",ui->userName->text());
-    cfg.insert("brokerId",ui->brokerId->text());
-    cfg.insert("frontMd",ui->frontMd->text());
-    cfg.insert("frontTd",ui->frontTd->text());
-    cfg.insert("subscribleIds",ui->subscribleIds->text());
-    db.putSync("cfg",cfg);
-    db.close();
+    Profile* profile = g_sm->profile();
+    profile->put("userId",ui->userId->text());
+    profile->put("brokerId",ui->brokerId->text());
+    profile->put("frontMd",ui->frontMd->text());
+    profile->put("frontTd",ui->frontTd->text());
+    profile->put("idPrefixList",ui->idPrefixList->text());
 }
 
 void ConfigDialog::Load(){
-    QLevelDB db;
-    db.setFilename(QDir::home().absoluteFilePath("mdcfg.db"));
-    db.open();
-    QVariantMap cfg = db.get("cfg").toMap();
-    ui->userName->setText(cfg.value("userName","").toString());
-    ui->brokerId->setText(cfg.value("brokerId","").toString());
-    ui->frontMd->setText(cfg.value("frontMd","").toString());
-    ui->frontTd->setText(cfg.value("frontTd","").toString());
-    ui->subscribleIds->setText(cfg.value("subscribleIds","if;ih;ic;sr").toString());
-    db.close();
+    Profile* profile = g_sm->profile();
+    ui->userId->setText(profile->get("userId",""));
+    ui->brokerId->setText(profile->get("brokerId",""));
+    ui->frontMd->setText(profile->get("frontMd",""));
+    ui->frontTd->setText(profile->get("frontTd",""));
+    ui->idPrefixList->setText(profile->get("idPrefixList","if;ih;ic;sr"));
 }

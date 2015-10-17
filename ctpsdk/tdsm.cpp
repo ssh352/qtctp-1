@@ -60,21 +60,21 @@ private:
     // 可能有多次回调
     void OnRspQryInstrument(InstrumentField* pInstrument, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        QString iid;
-        QString filter;
-        if (!idFilters_.length()) {
-            QString filters = sm()->idFilters();
-            idFilters_ = filters.split(";");
+        QString id;
+        QString prefix;
+        if (!idPrefixList_.length()) {
+            QString prefixlist = sm()->idPrefixList();
+            idPrefixList_ = prefixlist.split(";");
         }
         if (!isErrorRsp(pRspInfo, nRequestID) && pInstrument) {
-            iid = pInstrument->InstrumentID;
-            if (iid.length() <= 6) {
-                QString low_iid = iid.toLower();
-                for (int i = 0; i < idFilters_.length(); i++) {
-                    filter = idFilters_.at(i);
-                    if (low_iid.startsWith(filter)) {
-                        emit sm()->info(QString().sprintf("got id:%s", low_iid.toUtf8().constData()));
-                        ids_ << iid;
+            id = pInstrument->InstrumentID;
+            if (id.length() <= 6) {
+                QString low_id = id.toLower();
+                for (int i = 0; i < idPrefixList_.length(); i++) {
+                    prefix = idPrefixList_.at(i);
+                    if (low_id.startsWith(prefix)) {
+                        emit sm()->info(QString().sprintf("got id:%s", low_id.toUtf8().constData()));
+                        ids_ << id;
                         break;
                     }
                 }
@@ -107,19 +107,18 @@ public:
     void resetData()
     {
         ids_.clear();
-        idFilters_.clear();
+        idPrefixList_.clear();
     }
 
 private:
     TdSm* sm_;
     QStringList ids_;
-    QStringList idFilters_;
+    QStringList idPrefixList_;
 };
 
 ///////////
 TdSm::TdSm(QObject* parent)
     : QObject(parent)
-    , tdspi_(new TdSmSpi(this))
 {
 }
 
@@ -127,31 +126,42 @@ TdSm::~TdSm()
 {
 }
 
-void TdSm::init(QString name, QString pwd, QString brokerId, QString front, QString flowPath, QString ids)
+bool TdSm::init(QString userId, QString password, QString brokerId, QString frontTd, QString flowPathTd, QString idPrefixList)
 {
-    name_ = name;
-    pwd_ = pwd;
+    userId_ = userId;
+    password_ = password;
     brokerId_ = brokerId;
-    front_ = front;
-    flowPath_ = flowPath;
-    ids_ = ids;
+    frontTd_ = frontTd;
+    flowPathTd_ = flowPathTd;
+    idPrefixList_ = idPrefixList;
+
+    // check
+    if (userId_.length() == 0 || password_.length() == 0
+            || brokerId_.length() == 0 || frontTd_.length() == 0 || flowPathTd_.length() == 0
+            || idPrefixList_.length() == 0 ) {
+        return false;
+    }
+
+    return true;
 }
 
 void TdSm::start()
 {
     emit this->info("TdSm::start");
+
     if (tdapi_ != nullptr) {
         qFatal("tdapi_!=nullptr");
         return;
     }
 
     QDir dir;
-    dir.mkpath(flowPath_);
-    tdapi_ = TraderApi::CreateTraderApi(flowPath_.toStdString().c_str());
+    dir.mkpath(flowPathTd_);
+    tdapi_ = TraderApi::CreateTraderApi(flowPathTd_.toStdString().c_str());
     CtpCmdMgr::instance()->setTdApi(tdapi_);
     QObject::connect(this, &TdSm::runCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    tdspi_ = new TdSmSpi(this);
     tdapi_->RegisterSpi(tdspi_);
-    tdapi_->RegisterFront((char*)qPrintable(front_));
+    tdapi_->RegisterFront((char*)qPrintable(frontTd_));
     tdapi_->SubscribePublicTopic(TERT_QUICK);
     tdapi_->SubscribePrivateTopic(TERT_QUICK);
     tdapi_->Init();
@@ -173,10 +183,12 @@ void TdSm::logout()
 void TdSm::stop()
 {
     emit this->info("TdSm::stop");
+
     if (tdapi_ == nullptr) {
         qFatal("tdapi_==nullptr");
         return;
     }
+
     tdapi_->RegisterSpi(nullptr);
     tdapi_->Release();
 }

@@ -22,7 +22,7 @@ public:
     virtual ~TdSm();
 
 public:
-    void init(QString name, QString pwd, QString brokerId, QString front, QString flowPath,QString ids);
+    bool init(QString userId, QString password, QString brokerId, QString frontTd, QString flowPathTd,QString idPrefixList);
     void start();
     void logout();
     void stop();
@@ -31,9 +31,9 @@ public:
 protected:
     TraderApi* tdapi() { return tdapi_; }
     QString brokerId(){return brokerId_;}
-    QString userId(){return name_;}
-    QString password(){return pwd_;}
-    QString idFilters(){return ids_;}
+    QString userId(){return userId_;}
+    QString password(){return password_;}
+    QString idPrefixList(){return idPrefixList_;}
 
 signals:
     void statusChanged(int state);
@@ -42,12 +42,7 @@ signals:
     void runCmd(void* cmd);
 
 private:
-    QString name_;
-    QString pwd_;
-    QString brokerId_;
-    QString front_;
-    QString flowPath_;
-    QString ids_;
+    QString userId_,password_,brokerId_,frontTd_,flowPathTd_,idPrefixList_;
     TraderApi* tdapi_ = nullptr;
     TdSmSpi* tdspi_ = nullptr;
 

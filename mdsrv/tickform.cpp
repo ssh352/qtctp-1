@@ -2,6 +2,7 @@
 #include "ui_tickform.h"
 #include "mdsm.h"
 #include "ApiStruct.h"
+#include "ringbuffer.h"
 
 TickForm::TickForm(QWidget* parent)
     : QWidget(parent)
@@ -36,19 +37,28 @@ void TickForm::scanMd()
 {
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
-    int head = mdsm_->getMdItemHead(id_);
-    if (head < 0)
+
+    RingBuffer* rb = mdsm_->getRingBuffer(id_);
+    if (rb == nullptr) {
         return;
+    }
+
+    int head = rb->head();
+    if (head < 0) {
+        return;
+    }
 
     for (int i = 0; i < mdsm_->ringBufferLen() / 2; i++) {
-        void* p = mdsm_->getMdItem(id_, head);
-        if (p == nullptr)
+        void* p = rb->get(head);
+        if (p == nullptr) {
             return;
+        }
 
         onGotMdItem(p);
         head -= 1;
-        if (head == -1)
+        if (head == -1) {
             head += mdsm_->ringBufferLen();
+        }
     }
 }
 

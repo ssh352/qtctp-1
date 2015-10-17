@@ -6,7 +6,7 @@
 
 class MdApi;
 class MdSmSpi;
-class MdRingBuffer;
+class RingBuffer;
 
 enum {
     MDSM_DISCONNECTED = 1,
@@ -23,25 +23,13 @@ public:
     virtual ~MdSm();
 
 public:
-    void init(QString name, QString pwd, QString brokerId, QString front, QString flowPath);
+    bool init(QString name, QString pwd, QString brokerId, QString front, QString flowPath);
     void start();
     void stop();
     void subscrible(QStringList ids);
-    int getMdItemHead(QString id);
-    void* getMdItem(QString id, int index);
-    int ringBufferLen() { return ringbuffer_len; }
+    RingBuffer* getRingBuffer(QString id);
+    int ringBufferLen() { return ringBufferLen_; }
     static QString version();
-
-protected:
-    MdApi* mdapi() { return mdapi_; }
-    QString brokerId() { return brokerId_; }
-    QString userId() { return name_; }
-    QString password() { return pwd_; }
-
-private:
-    void initRb(QStringList ids);
-    void freeRb();
-    void* saveRb(void* mdItem, int& index);
 
 signals:
     void statusChanged(int state);
@@ -49,16 +37,23 @@ signals:
     void runCmd(void* cmd);
     void gotMdItem(void* mdItem, int indexRb);
 
+protected:
+    MdApi* mdapi() { return mdapi_; }
+    QString brokerId() { return brokerId_; }
+    QString userId() { return userId_; }
+    QString password() { return password_; }
+
 private:
-    QString name_;
-    QString pwd_;
-    QString brokerId_;
-    QString front_;
-    QString flowPath_;
+    void initRb(QStringList ids);
+    void freeRb();
+    void* saveRb(void* mdItem, int& indexRb);
+
+private:
+    QString userId_,password_,brokerId_,frontMd_,flowPathMd_;
     MdApi* mdapi_ = nullptr;
     MdSmSpi* mdspi_ = nullptr;
-    QMap<QString, MdRingBuffer*> rbs_;
-    const int ringbuffer_len = 256;
+    QMap<QString, RingBuffer*> rbs_;
+    const int ringBufferLen_ = 256;
 
     friend MdSmSpi;
 };

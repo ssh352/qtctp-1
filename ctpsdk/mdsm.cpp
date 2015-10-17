@@ -4,70 +4,7 @@
 #include "utils.h"
 #include "ctpcmd.h"
 #include <QMap>
-#include <atomic>
-
-//每个合约在内存中使用ringbuffer保留(256)个tick，ui上要延迟1分钟使用请自己复制=
-class MdRingBuffer {
-public:
-    void init(int item_len, int item_count)
-    {
-        int buflen = item_len * item_count;
-        if (buflen > 4 * 1024 * 1024) {
-            qFatal("ringbuffer > 4M");
-            return;
-        }
-        buffer_ = new char[item_len * item_count];
-        items_ = new void* [item_count];
-        for (int i = 0; i < item_count; i++) {
-            items_[i] = 0;
-        }
-        head_ = -1;
-        item_count_ = item_count;
-        item_len_ = item_len;
-    }
-
-    void free()
-    {
-        delete[] buffer_;
-        delete[] items_;
-    }
-
-    //需要判断返回值哦=
-    void* get(int index)
-    {
-        if (index < 0)
-            return nullptr;
-
-        return items_[index % item_count_];
-    }
-
-    int head()
-    {
-        //原子操作=
-        return head_;
-    }
-
-    void* put(void* item, int& index)
-    {
-        index = head_ + 1;
-        index = index % item_count_;
-
-        char* buf = buffer_ + index * item_len_;
-        items_[index] = buf;
-        memcpy(buf, item, item_len_);
-        //原子操作=
-        head_ = index;
-
-        return buf;
-    }
-
-private:
-    int item_count_;
-    int item_len_;
-    void** items_;
-    char* buffer_;
-    std::atomic_int32_t head_;
-};
+#include "ringbuffer.h"
 
 ///////////
 class MdSmSpi : public MdSpi {
@@ -137,9 +74,9 @@ private:
 
     void OnRtnDepthMarketData(DepthMarketDataField* pDepthMarketData) override
     {
-        int index = -1;
-        void* item = sm()->saveRb(pDepthMarketData, index);
-        emit sm()->gotMdItem(item, index);
+        int indexRb = -1;
+        void* item = sm()->saveRb(pDepthMarketData, indexRb);
+        emit sm()->gotMdItem(item, indexRb);
     }
 
 public:
@@ -173,7 +110,6 @@ private:
 ///////////
 MdSm::MdSm(QObject* parent)
     : QObject(parent)
-    , mdspi_(new MdSmSpi(this))
 {
 }
 
@@ -181,30 +117,39 @@ MdSm::~MdSm()
 {
 }
 
-void MdSm::init(QString name, QString pwd, QString brokerId, QString front, QString flowPath)
+bool MdSm::init(QString userId, QString password, QString brokerId, QString frontMd, QString flowPathMd)
 {
-    name_ = name;
-    pwd_ = pwd;
+    userId_ = userId;
+    password_ = password;
     brokerId_ = brokerId;
-    front_ = front;
-    flowPath_ = flowPath;
+    frontMd_ = frontMd;
+    flowPathMd_ = flowPathMd;
+
+    //check
+    if (userId_.length() == 0 || password_.length() == 0
+            || brokerId_.length() == 0 || frontMd_.length() == 0 || flowPathMd_.length() == 0) {
+        return false;
+    }
+    return true;
 }
 
 void MdSm::start()
 {
     emit this->info("MdSm::start");
+
     if (mdapi_ != nullptr) {
         qFatal("mdapi_!=nullptr");
         return;
     }
 
     QDir dir;
-    dir.mkpath(flowPath_);
-    mdapi_ = MdApi::CreateMdApi(flowPath_.toStdString().c_str());
+    dir.mkpath(flowPathMd_);
+    mdapi_ = MdApi::CreateMdApi(flowPathMd_.toStdString().c_str());
     CtpCmdMgr::instance()->setMdApi(mdapi_);
     QObject::connect(this, &MdSm::runCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    mdspi_ = new MdSmSpi(this);
     mdapi_->RegisterSpi(mdspi_);
-    mdapi_->RegisterFront((char*)qPrintable(front_));
+    mdapi_->RegisterFront((char*)qPrintable(frontMd_));
     mdapi_->Init();
     mdapi_->Join();
     CtpCmdMgr::instance()->setMdApi(nullptr);
@@ -219,6 +164,7 @@ void MdSm::start()
 void MdSm::stop()
 {
     emit this->info("MdSm::stop");
+
     if (mdapi_ == nullptr) {
         qFatal("mdapi_==nullptr");
         return;
@@ -240,7 +186,9 @@ QString MdSm::version()
     return MdApi::GetApiVersion();
 }
 
+//todo(sunwangme)
 //断网自动重连后再次走这里，先free再来=
+//这里神马时候释放得想想：disconnect or reconnect？=
 void MdSm::initRb(QStringList ids){
     if(rbs_.count()){
         freeRb();
@@ -248,8 +196,8 @@ void MdSm::initRb(QStringList ids){
 
     for(int i=0;i<ids.count();i++){
         QString id = ids.at(i);
-        MdRingBuffer* rb = new MdRingBuffer;
-        rb->init(sizeof(DepthMarketDataField), ringbuffer_len);
+        RingBuffer* rb = new RingBuffer;
+        rb->init(sizeof(DepthMarketDataField), ringBufferLen_);
         rbs_.insert(id, rb);
     }
 }
@@ -258,7 +206,7 @@ void MdSm::freeRb()
 {
     auto rb_list = rbs_.values();
     for (int i = 0; i < rb_list.length(); i++) {
-        MdRingBuffer* rb = rb_list.at(i);
+        RingBuffer* rb = rb_list.at(i);
         rb->free();
         delete rb;
     }
@@ -269,33 +217,14 @@ void* MdSm::saveRb(void* mdItem, int& index)
 {
     DepthMarketDataField* mdf = (DepthMarketDataField*)mdItem;
     QString id = mdf->InstrumentID;
-    MdRingBuffer* rb = rbs_.value(id);
+    RingBuffer* rb = rbs_.value(id);
     if (rb == nullptr) {
-        //预先分配避免多线程锁的问题,这里就不考虑这种情况了=
-        //rb = new MdRingBuffer;
-        //rb->init(sizeof(DepthMarketDataField), ringbuffer_len);
-        //rbs_.insert(id, rb);
         qFatal("rb == nullptr");
     }
 
     return rb->put(mdItem, index);
 }
 
-void* MdSm::getMdItem(QString id, int index)
-{
-    MdRingBuffer* rb = rbs_.value(id);
-    if (!rb) {
-        return nullptr;
-    }
-
-    return rb->get(index);
-}
-
-int MdSm::getMdItemHead(QString id){
-    MdRingBuffer* rb = rbs_.value(id);
-    if (!rb) {
-        return -1;
-    }
-
-    return rb->head();
+RingBuffer* MdSm::getRingBuffer(QString id){
+    return rbs_.value(id);
 }

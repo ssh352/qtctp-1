@@ -13,6 +13,7 @@ class QThread;
 class MdSm;
 class TdSm;
 class CtpCmdMgr;
+class Profile;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -29,17 +30,16 @@ public slots:
     void onGotMdItem(void* item);
 
 private slots:
+    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void on_actionAbout_triggered();
     void on_actionConfig_triggered();
     void on_actionStart_triggered();
     void on_actionStop_triggered();
     void on_actionQuit_triggered();
-    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
-
     void on_tableWidget_cellDoubleClicked(int row, int column);
 
 private:
-    void loadCfg();
+    //void loadCfg();
     void closeEvent (QCloseEvent *event) override;
     void createTrayIcon();
     void createActions();
@@ -50,10 +50,11 @@ private:
     QThread* mdsm_thread_ = nullptr;
     TdSm* tdsm_ = nullptr;
     QThread* tdsm_thread_ = nullptr;
-    QString userName_,password_,brokerId_,frontTd_,frontMd_,subscribleIds_;
+    QString password_;
     CtpCmdMgr *cmdmgr_;
     QMap<QString,int> ids_row_;
     QStringList ids_col_;
+    Profile* profile_ = nullptr;
 
 private:
     QAction *minimizeAction;

@@ -18,12 +18,16 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     configdialog.cpp \
     logindialog.cpp \
-    tickform.cpp
+    tickform.cpp \
+    servicemgr.cpp \
+    profile.cpp
 
 HEADERS  += mainwindow.h \
     configdialog.h \
     logindialog.h \
-    tickform.h
+    tickform.h \
+    servicemgr.h \
+    profile.h
 
 FORMS    += mainwindow.ui \
     configdialog.ui \

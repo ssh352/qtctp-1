@@ -4,15 +4,15 @@
 #include "logindialog.h"
 
 #include "utils.h"
-#include <QDir>
 #include "mdsm.h"
 #include <QThread>
-#include "qleveldb.h"
 #include "tdsm.h"
 #include "ctpcmd.h"
 #include <QCloseEvent>
 #include "ApiStruct.h"
 #include "tickform.h"
+#include "servicemgr.h"
+#include "profile.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -41,6 +41,9 @@ MainWindow::MainWindow(QWidget* parent)
     for (int i = 0; i < ids_col_.length(); i++) {
         ui->tableWidget->setHorizontalHeaderItem(i, new QTableWidgetItem(ids_col_.at(i)));
     }
+
+    // profile
+    profile_ = g_sm->profile();
 }
 
 MainWindow::~MainWindow()
@@ -67,12 +70,22 @@ void MainWindow::onMdSmStateChanged(int state)
             qFatal("tdsm_ != nullptr");
             return;
         }
+
+        // init tdsm
         tdsm_ = new TdSm;
+        bool res = tdsm_->init(profile_->get("userId"), password_,
+            profile_->get("brokerId"), profile_->get("frontTd"),
+            profile_->flowPathTd(), profile_->get("idPrefixList"));
+        if (!res) {
+            delete tdsm_;
+            tdsm_ = nullptr;
+            onInfo("参数无效，请核对参数=");
+            return;
+        }
+
+        // go...
         tdsm_thread_ = new QThread;
         tdsm_->moveToThread(tdsm_thread_);
-
-        //居然要传一个/结尾
-        tdsm_->init(userName_, password_, brokerId_, frontTd_, QDir::temp().absoluteFilePath("hdsrv/tdapi/"), subscribleIds_);
         QObject::connect(tdsm_thread_, &QThread::started, tdsm_, &TdSm::start, Qt::QueuedConnection);
         QObject::connect(tdsm_thread_, &QThread::finished, tdsm_, &TdSm::deleteLater, Qt::QueuedConnection);
         QObject::connect(tdsm_thread_, &QThread::finished, tdsm_thread_, &QThread::deleteLater, Qt::QueuedConnection);
@@ -151,20 +164,10 @@ void MainWindow::on_actionStart_triggered()
 {
     // input password
     LoginDialog dlg;
-    if (dlg.exec()) {
-        password_ = dlg.getPassword();
-    }
-    else {
+    if (!dlg.exec()) {
         return;
     }
-
-    // check setting
-    loadCfg();
-    if (userName_.length() == 0 || password_.length() == 0 || brokerId_.length() == 0
-        || frontMd_.length() == 0 || frontTd_.length() == 0) {
-        onInfo("参数无效，请核对参数=");
-        return;
-    }
+    password_ = dlg.getPassword();
 
     // check
     if (mdsm_ != nullptr) {
@@ -173,10 +176,18 @@ void MainWindow::on_actionStart_triggered()
 
     // init mdsm
     mdsm_ = new MdSm;
+    bool res = mdsm_->init(profile_->get("userId"), password_,
+        profile_->get("brokerId"), profile_->get("frontMd"), profile_->flowPathMd());
+    if (!res) {
+        delete mdsm_;
+        mdsm_ = nullptr;
+        onInfo("参数无效，请核对参数=");
+        return;
+    }
+
+    // go...
     mdsm_thread_ = new QThread;
     mdsm_->moveToThread(mdsm_thread_);
-    //居然要传一个/结尾=
-    mdsm_->init(userName_, password_, brokerId_, frontMd_, QDir::temp().absoluteFilePath("hdsrv/mdapi/"));
     QObject::connect(mdsm_thread_, &QThread::started, mdsm_, &MdSm::start, Qt::QueuedConnection);
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_, &MdSm::deleteLater, Qt::QueuedConnection);
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_thread_, &QThread::deleteLater, Qt::QueuedConnection);
@@ -191,27 +202,13 @@ void MainWindow::on_actionStart_triggered()
     ui->actionStop->setEnabled(true);
 }
 
-void MainWindow::loadCfg()
-{
-    QLevelDB db;
-    db.setFilename(QDir::home().absoluteFilePath("mdcfg.db"));
-    db.open();
-    QVariantMap cfg = db.get("cfg").toMap();
-    userName_ = cfg.value("userName", "").toString();
-    brokerId_ = cfg.value("brokerId", "").toString();
-    frontMd_ = cfg.value("frontMd", "").toString();
-    frontTd_ = cfg.value("frontTd", "").toString();
-    subscribleIds_ = cfg.value("subscribleIds", "if;ih;ic;sr").toString();
-    db.close();
-}
-
 void MainWindow::on_actionStop_triggered()
 {
-    if (tdsm_){
+    if (tdsm_) {
         tdsm_->stop();
     }
 
-    if (mdsm_){
+    if (mdsm_) {
         mdsm_->stop();
     }
 
@@ -333,6 +330,6 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 {
     TickForm* form = new TickForm();
     form->setWindowFlags(Qt::Window);
-    form->Init(mdsm_,ui->tableWidget->item(row,0)->text());
+    form->Init(mdsm_, ui->tableWidget->item(row, 0)->text());
     form->show();
 }

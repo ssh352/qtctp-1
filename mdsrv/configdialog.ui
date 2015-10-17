@@ -17,12 +17,12 @@
    <item row="0" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>userName:</string>
+      <string>userId:</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="userName"/>
+    <widget class="QLineEdit" name="userId"/>
    </item>
    <item row="1" column="0">
     <widget class="QLabel" name="label_2">
@@ -57,12 +57,12 @@
    <item row="4" column="0">
     <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>subscribleIds:</string>
+      <string>idPrefixList:</string>
      </property>
     </widget>
    </item>
    <item row="4" column="1">
-    <widget class="QLineEdit" name="subscribleIds"/>
+    <widget class="QLineEdit" name="idPrefixList"/>
    </item>
    <item row="5" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
