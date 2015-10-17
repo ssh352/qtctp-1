@@ -28,18 +28,18 @@ public:
     void stop();
     static QString version();
 
+signals:
+    void statusChanged(int state);
+    void gotIds(QStringList ids);
+    void runCmd(void* cmd);
+
 protected:
     TraderApi* tdapi() { return tdapi_; }
     QString brokerId(){return brokerId_;}
     QString userId(){return userId_;}
     QString password(){return password_;}
     QString idPrefixList(){return idPrefixList_;}
-
-signals:
-    void statusChanged(int state);
     void info(QString msg);
-    void gotIds(QStringList ids);
-    void runCmd(void* cmd);
 
 private:
     QString userId_,password_,brokerId_,frontTd_,flowPathTd_,idPrefixList_;

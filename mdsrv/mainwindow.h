@@ -8,23 +8,22 @@
 namespace Ui {
 class MainWindow;
 }
-
-class QThread;
-class MdSm;
-class TdSm;
-class CtpCmdMgr;
 class Profile;
+class Logger;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
+    //构造和析构做ui,init和shutdown做逻辑，析构函数时逻辑已经全部shutdown=
+    //ui的shutdown早于逻辑的shutdown=
+    //不要保留service的指针，最好每次都调用函数来取，便于做检查=
     explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
+    void init();
+    void shutdown();
 
 public slots:
-    void onMdSmStateChanged(int state);
-    void onTdSmStateChanged(int state);
     void onInfo(QString msg);
     void onGotIds(QStringList ids);
     void onGotMdItem(void* item);
@@ -39,22 +38,16 @@ private slots:
     void on_tableWidget_cellDoubleClicked(int row, int column);
 
 private:
-    //void loadCfg();
     void closeEvent (QCloseEvent *event) override;
     void createTrayIcon();
     void createActions();
+    Profile* profile();
+    Logger* logger();
 
 private:
     Ui::MainWindow* ui;
-    MdSm* mdsm_ = nullptr;
-    QThread* mdsm_thread_ = nullptr;
-    TdSm* tdsm_ = nullptr;
-    QThread* tdsm_thread_ = nullptr;
-    QString password_;
-    CtpCmdMgr *cmdmgr_;
     QMap<QString,int> ids_row_;
     QStringList ids_col_;
-    Profile* profile_ = nullptr;
 
 private:
     QAction *minimizeAction;

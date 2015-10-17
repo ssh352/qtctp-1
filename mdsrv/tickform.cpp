@@ -3,6 +3,9 @@
 #include "mdsm.h"
 #include "ApiStruct.h"
 #include "ringbuffer.h"
+#include "servicemgr.h"
+#include "ctpmgr.h"
+#include "mdsm.h"
 
 TickForm::TickForm(QWidget* parent)
     : QWidget(parent)
@@ -25,9 +28,8 @@ TickForm::~TickForm()
     delete ui;
 }
 
-void TickForm::Init(MdSm* mdsm, QString id)
+void TickForm::Init(QString id)
 {
-    mdsm_ = mdsm;
     id_ = id;
     this->setWindowTitle(id);
     scanMd();
@@ -35,10 +37,15 @@ void TickForm::Init(MdSm* mdsm, QString id)
 
 void TickForm::scanMd()
 {
+    MdSm* mdsm = g_sm->ctpMgr()->mdsm();
+    if(!mdsm){
+        return;
+    }
+
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    RingBuffer* rb = mdsm_->getRingBuffer(id_);
+    RingBuffer* rb = mdsm->getRingBuffer(id_);
     if (rb == nullptr) {
         return;
     }

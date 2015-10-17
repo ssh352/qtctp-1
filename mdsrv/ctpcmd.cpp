@@ -1,39 +1,34 @@
 #include "ctpcmd.h"
 #include "MdApi.h"
 #include "TraderApi.h"
+#include "servicemgr.h"
+#include "logger.h"
+#include "ctpcmdmgr.h"
 
-CtpCmdMgr* CtpCmdMgr::this_ = nullptr;
-CtpCmdMgr::CtpCmdMgr(QObject* parent)
-    : QObject(parent)
-{
-    this_ = this;
-}
+///////////////////
 
 int CtpCmd::g_reqId_ = 1;
 
-void CtpCmdMgr::runNow()
-{
-    if (cmds_.length() == 0)
-        return;
-
-    CtpCmd* cmd = cmds_.head();
-    cmd->runNow();
-    if (cmd->result() == -3) {
-        cmd->resetId();
-        emit onInfo(QString().sprintf("发包太快，reqId=%d", cmd->reqId()));
-        return;
-    }
-    cmds_.dequeue();
-    delete cmd;
-    return;
+TraderApi* CtpCmd::tdapi(){
+    return g_sm->ctpCmdMgr()->tdapi();
 }
+
+MdApi* CtpCmd::mdapi(){
+    return g_sm->ctpCmdMgr()->mdapi();
+}
+
+void CtpCmd::info(QString msg){
+    g_sm->logger()->info(msg);
+}
+
+///////////////////
 
 void CmdMdLogin::run()
 {
     ReqUserLoginField req;
     memset(&req, 0, sizeof(req));
     strncpy(req.BrokerID, brokerId_.toStdString().c_str(), sizeof(req.BrokerID) - 1);
-    strncpy(req.UserID, userName_.toStdString().c_str(), sizeof(req.UserID) - 1);
+    strncpy(req.UserID, userId_.toStdString().c_str(), sizeof(req.UserID) - 1);
     strncpy(req.Password, password_.toStdString().c_str(), sizeof(req.Password) - 1);
     result_ = mdapi()->ReqUserLogin(&req, reqId_);
     info(QString().sprintf("CmdMdLogin,reqId=%d", reqId_));
@@ -57,7 +52,7 @@ void CmdTdLogin::run()
     ReqUserLoginField req;
     memset(&req, 0, sizeof(req));
     strncpy(req.BrokerID, brokerId_.toStdString().c_str(), sizeof(req.BrokerID) - 1);
-    strncpy(req.UserID, userName_.toStdString().c_str(), sizeof(req.UserID) - 1);
+    strncpy(req.UserID, userId_.toStdString().c_str(), sizeof(req.UserID) - 1);
     strncpy(req.Password, password_.toStdString().c_str(), sizeof(req.Password) - 1);
     result_ = tdapi()->ReqUserLogin(&req, reqId_);
     info(QString().sprintf("CmdTdLogin,reqId=%d", reqId_));
@@ -68,7 +63,7 @@ void CmdTdLogout::run()
     UserLogoutField req;
     memset(&req, 0, sizeof(req));
     strncpy(req.BrokerID, brokerId_.toStdString().c_str(), sizeof(req.BrokerID) - 1);
-    strncpy(req.UserID, userName_.toStdString().c_str(), sizeof(req.UserID) - 1);
+    strncpy(req.UserID, userId_.toStdString().c_str(), sizeof(req.UserID) - 1);
     result_ = tdapi()->ReqUserLogout(&req, reqId_);
     info(QString().sprintf("CmdTdLogout,reqId=%d", reqId_));
 }

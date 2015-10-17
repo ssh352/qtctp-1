@@ -29,10 +29,10 @@ public:
     void subscrible(QStringList ids);
     RingBuffer* getRingBuffer(QString id);
     static QString version();
+    void info(QString msg);
 
 signals:
     void statusChanged(int state);
-    void info(QString msg);
     void runCmd(void* cmd);
     void gotMdItem(void* mdItem, int indexRb);
 

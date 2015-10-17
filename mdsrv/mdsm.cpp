@@ -5,6 +5,9 @@
 #include "ctpcmd.h"
 #include <QMap>
 #include "ringbuffer.h"
+#include "servicemgr.h"
+#include "ctpcmdmgr.h"
+#include "logger.h"
 
 ///////////
 class MdSmSpi : public MdSpi {
@@ -17,7 +20,7 @@ public:
 private:
     void OnFrontConnected() override
     {
-        emit sm()->info("MdSmSpi::OnFrontConnected");
+        info("MdSmSpi::OnFrontConnected");
         emit sm()->statusChanged(MDSM_CONNECTED);
         emit sm()->runCmd(new CmdMdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
@@ -27,18 +30,18 @@ private:
     void OnFrontDisconnected(int nReason) override
     {
         resetData();
-        emit sm()->info("MdSmSpi::OnFrontDisconnected");
+        info("MdSmSpi::OnFrontDisconnected");
         emit sm()->statusChanged(MDSM_DISCONNECTED);
     }
 
     void OnHeartBeatWarning(int nTimeLapse) override
     {
-        emit sm()->info("MdSmSpi::OnHeartBeatWarning");
+        info("MdSmSpi::OnHeartBeatWarning");
     }
 
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->info("MdSmSpi::OnRspUserLogin");
+        info("MdSmSpi::OnRspUserLogin");
         if (!isErrorRsp(pRspInfo, nRequestID) && bIsLast) {
             emit sm()->statusChanged(MDSM_LOGINED);
         }
@@ -51,7 +54,7 @@ private:
 
     void OnRspError(RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->info(QString().sprintf("MdSmSpi::OnRspError,reqId=%d", nRequestID));
+        info(QString().sprintf("MdSmSpi::OnRspError,reqId=%d", nRequestID));
     }
 
     // 订阅成功了也会调用,目前是不管啥都返回订阅成功
@@ -60,7 +63,7 @@ private:
         if (!isErrorRsp(pRspInfo, nRequestID) && pSpecificInstrument) {
             QString iid = pSpecificInstrument->InstrumentID;
             got_ids_ << iid;
-            emit sm()->info(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
+            info(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
         }
 
         if (bIsLast && got_ids_.length()) {
@@ -79,11 +82,11 @@ private:
         emit sm()->gotMdItem(item, indexRb);
     }
 
-public:
+private:
     bool isErrorRsp(RspInfoField* pRspInfo, int reqId)
     {
         if (pRspInfo && pRspInfo->ErrorID != 0) {
-            emit sm()->info(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s",
+            info(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s",
                 reqId,
                 pRspInfo->ErrorID,
                 gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
@@ -100,6 +103,10 @@ public:
     void resetData()
     {
         got_ids_.clear();
+    }
+
+    void info(QString msg){
+        g_sm->logger()->info(msg);
     }
 
 private:
@@ -135,7 +142,7 @@ bool MdSm::init(QString userId, QString password, QString brokerId, QString fron
 
 void MdSm::start()
 {
-    emit this->info("MdSm::start");
+    info("MdSm::start");
 
     if (mdapi_ != nullptr) {
         qFatal("mdapi_!=nullptr");
@@ -145,15 +152,15 @@ void MdSm::start()
     QDir dir;
     dir.mkpath(flowPathMd_);
     mdapi_ = MdApi::CreateMdApi(flowPathMd_.toStdString().c_str());
-    CtpCmdMgr::instance()->setMdApi(mdapi_);
-    QObject::connect(this, &MdSm::runCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    g_sm->ctpCmdMgr()->setMdApi(mdapi_);
+    QObject::connect(this, &MdSm::runCmd, g_sm->ctpCmdMgr(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
     mdspi_ = new MdSmSpi(this);
     mdapi_->RegisterSpi(mdspi_);
     mdapi_->RegisterFront((char*)qPrintable(frontMd_));
     mdapi_->Init();
     mdapi_->Join();
-    CtpCmdMgr::instance()->setMdApi(nullptr);
-    emit this->info("mdapi::join end!!!");
+    g_sm->ctpCmdMgr()->setMdApi(nullptr);
+    info("mdapi::join end!!!");
     emit this->statusChanged(MDSM_STOPPED);
     mdapi_ = nullptr;
     delete mdspi_;
@@ -163,7 +170,7 @@ void MdSm::start()
 
 void MdSm::stop()
 {
-    emit this->info("MdSm::stop");
+    info("MdSm::stop");
 
     if (mdapi_ == nullptr) {
         qFatal("mdapi_==nullptr");
@@ -177,7 +184,7 @@ void MdSm::stop()
 void MdSm::subscrible(QStringList ids)
 {
     initRb(ids);
-    emit this->info("MdSm::subscrible");
+    info("MdSm::subscrible");
     emit this->runCmd(new CmdMdSubscrible(ids));
 }
 
@@ -227,4 +234,8 @@ void* MdSm::saveRb(void* mdItem, int& index)
 
 RingBuffer* MdSm::getRingBuffer(QString id){
     return rbs_.value(id);
+}
+
+void MdSm::info(QString msg){
+    g_sm->logger()->info(msg);
 }

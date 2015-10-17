@@ -3,6 +3,9 @@
 #include "TraderApi.h"
 #include "utils.h"
 #include "ctpcmd.h"
+#include "servicemgr.h"
+#include "ctpcmdmgr.h"
+#include "logger.h"
 
 ///////////
 class TdSmSpi : public TraderSpi {
@@ -15,7 +18,7 @@ public:
 private:
     void OnFrontConnected() override
     {
-        emit sm()->info("TdSmSpi::OnFrontConnected");
+        info("TdSmSpi::OnFrontConnected");
         emit sm()->statusChanged(TDSM_CONNECTED);
         emit sm()->runCmd(new CmdTdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
@@ -24,7 +27,7 @@ private:
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
     void OnFrontDisconnected(int nReason) override
     {
-        emit sm()->info("TdSmSpi::OnFrontDisconnected");
+        info("TdSmSpi::OnFrontDisconnected");
         emit sm()->statusChanged(TDSM_DISCONNECTED);
 
         resetData();
@@ -32,12 +35,12 @@ private:
 
     void OnHeartBeatWarning(int nTimeLapse) override
     {
-        emit sm()->info("TdSmSpi::OnHeartBeatWarning");
+        info("TdSmSpi::OnHeartBeatWarning");
     }
 
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->info("TdSmSpi::OnRspUserLogin");
+        info("TdSmSpi::OnRspUserLogin");
         if (bIsLast && !isErrorRsp(pRspInfo, nRequestID)) {
             emit sm()->statusChanged(TDSM_LOGINED);
             emit sm()->runCmd(new CmdTdQueryInstrument());
@@ -46,7 +49,7 @@ private:
 
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->info("TdSmSpi::OnRspUserLogout");
+        info("TdSmSpi::OnRspUserLogout");
         if (!isErrorRsp(pRspInfo, nRequestID) && bIsLast) {
             emit sm()->statusChanged(TDSM_LOGOUTED);
         }
@@ -54,7 +57,7 @@ private:
 
     void OnRspError(RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        emit sm()->info(QString().sprintf("TdSmSpi::OnRspError,reqId=%d", nRequestID));
+        sm()->info(QString().sprintf("TdSmSpi::OnRspError,reqId=%d", nRequestID));
     }
 
     // 可能有多次回调
@@ -73,7 +76,7 @@ private:
                 for (int i = 0; i < idPrefixList_.length(); i++) {
                     prefix = idPrefixList_.at(i);
                     if (low_id.startsWith(prefix)) {
-                        emit sm()->info(QString().sprintf("got id:%s", low_id.toUtf8().constData()));
+                        info(QString().sprintf("got id:%s", low_id.toUtf8().constData()));
                         ids_ << id;
                         break;
                     }
@@ -82,18 +85,18 @@ private:
         }
 
         if (bIsLast) {
-            emit sm()->info(QString().sprintf("total got ids:%d", ids_.length()));
+            info(QString().sprintf("total got ids:%d", ids_.length()));
             if (ids_.length()) {
                 emit sm()->gotIds(ids_);
             }
         }
     }
 
-public:
+private:
     bool isErrorRsp(RspInfoField* pRspInfo, int reqId)
     {
         if (pRspInfo && pRspInfo->ErrorID != 0) {
-            emit sm()->info(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
+            info(QString().sprintf("<==错误，reqid=%d,errorId=%d，msg=%s", reqId, pRspInfo->ErrorID, gbk2utf16(pRspInfo->ErrorMsg).toUtf8().constData()));
             return true;
         }
         return false;
@@ -108,6 +111,10 @@ public:
     {
         ids_.clear();
         idPrefixList_.clear();
+    }
+
+    void info(QString msg){
+        g_sm->logger()->info(msg);
     }
 
 private:
@@ -147,7 +154,7 @@ bool TdSm::init(QString userId, QString password, QString brokerId, QString fron
 
 void TdSm::start()
 {
-    emit this->info("TdSm::start");
+    info("TdSm::start");
 
     if (tdapi_ != nullptr) {
         qFatal("tdapi_!=nullptr");
@@ -157,8 +164,8 @@ void TdSm::start()
     QDir dir;
     dir.mkpath(flowPathTd_);
     tdapi_ = TraderApi::CreateTraderApi(flowPathTd_.toStdString().c_str());
-    CtpCmdMgr::instance()->setTdApi(tdapi_);
-    QObject::connect(this, &TdSm::runCmd, CtpCmdMgr::instance(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    g_sm->ctpCmdMgr()->setTdApi(tdapi_);
+    QObject::connect(this, &TdSm::runCmd, g_sm->ctpCmdMgr(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
     tdspi_ = new TdSmSpi(this);
     tdapi_->RegisterSpi(tdspi_);
     tdapi_->RegisterFront((char*)qPrintable(frontTd_));
@@ -166,8 +173,8 @@ void TdSm::start()
     tdapi_->SubscribePrivateTopic(TERT_QUICK);
     tdapi_->Init();
     tdapi_->Join();
-    CtpCmdMgr::instance()->setTdApi(nullptr);
-    emit this->info("tdapi::join end!!!");
+    g_sm->ctpCmdMgr()->setTdApi(nullptr);
+    info("tdapi::join end!!!");
     emit this->statusChanged(TDSM_STOPPED);
     tdapi_ = nullptr;
     delete tdspi_;
@@ -176,13 +183,13 @@ void TdSm::start()
 
 void TdSm::logout()
 {
-    emit this->info("TdSm::logout");
+    info("TdSm::logout");
     emit this->runCmd(new CmdTdLogout(userId(), brokerId()));
 }
 
 void TdSm::stop()
 {
-    emit this->info("TdSm::stop");
+    info("TdSm::stop");
 
     if (tdapi_ == nullptr) {
         qFatal("tdapi_==nullptr");
@@ -197,3 +204,8 @@ QString TdSm::version()
 {
     return TraderApi::GetApiVersion();
 }
+
+void TdSm::info(QString msg){
+    g_sm->logger()->info(msg);
+}
+

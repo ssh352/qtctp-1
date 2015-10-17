@@ -6,7 +6,6 @@
 namespace Ui {
 class TickForm;
 }
-class MdSm;
 
 class TickForm : public QWidget
 {
@@ -15,7 +14,7 @@ class TickForm : public QWidget
 public:
     explicit TickForm(QWidget *parent = 0);
     ~TickForm();
-    void Init(MdSm* mdsm,QString id);
+    void Init(QString id);
 
 private:
     void scanMd();
@@ -27,7 +26,6 @@ private:
     Ui::TickForm *ui;
     QStringList ids_col_;
     void onGotMdItem(void* item);
-    MdSm* mdsm_;
     QString id_;
 };
 

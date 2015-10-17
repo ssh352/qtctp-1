@@ -20,14 +20,28 @@ SOURCES += main.cpp\
     logindialog.cpp \
     tickform.cpp \
     servicemgr.cpp \
-    profile.cpp
+    profile.cpp \
+    logger.cpp \
+    ctpcmd.cpp \
+    mdsm.cpp \
+    ringbuffer.cpp \
+    tdsm.cpp \
+    ctpcmdmgr.cpp \
+    ctpmgr.cpp
 
 HEADERS  += mainwindow.h \
     configdialog.h \
     logindialog.h \
     tickform.h \
     servicemgr.h \
-    profile.h
+    profile.h \
+    logger.h \
+    ctpcmd.h \
+    mdsm.h \
+    ringbuffer.h \
+    tdsm.h \
+    ctpcmdmgr.h \
+    ctpmgr.h
 
 FORMS    += mainwindow.ui \
     configdialog.ui \
