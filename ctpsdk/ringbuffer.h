@@ -24,6 +24,11 @@ public:
         item_len_ = item_len;
     }
 
+    int count()
+    {
+        return item_count_;
+    }
+
     void free()
     {
         delete[] buffer_;
@@ -66,6 +71,5 @@ private:
     char* buffer_;
     std::atomic_int32_t head_;
 };
-
 
 #endif // RINGBUFFER_H

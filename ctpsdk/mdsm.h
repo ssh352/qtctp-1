@@ -28,7 +28,6 @@ public:
     void stop();
     void subscrible(QStringList ids);
     RingBuffer* getRingBuffer(QString id);
-    int ringBufferLen() { return ringBufferLen_; }
     static QString version();
 
 signals:

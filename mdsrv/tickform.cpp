@@ -48,7 +48,7 @@ void TickForm::scanMd()
         return;
     }
 
-    for (int i = 0; i < mdsm_->ringBufferLen() / 2; i++) {
+    for (int i = 0; i < rb->count() / 2; i++) {
         void* p = rb->get(head);
         if (p == nullptr) {
             return;
@@ -57,7 +57,7 @@ void TickForm::scanMd()
         onGotMdItem(p);
         head -= 1;
         if (head == -1) {
-            head += mdsm_->ringBufferLen();
+            head += rb->count();
         }
     }
 }
