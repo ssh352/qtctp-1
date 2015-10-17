@@ -1,4 +1,4 @@
-SOURCE_DIR = $$PWD/qleveldb
+SOURCE_DIR = $$PWD/profile
 
 INCLUDEPATH += \
     $$SOURCE_DIR/include \

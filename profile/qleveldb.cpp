@@ -1,6 +1,6 @@
-#include "leveldb/db.h"
 #include "qleveldb.h"
 #include "qleveldbbatch.h"
+#include <leveldb/db.h>
 #include <QtCore>
 
 QLevelDB::QLevelDB(QObject* parent)

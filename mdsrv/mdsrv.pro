@@ -53,7 +53,7 @@ FORMS    += ui/mainwindow.ui \
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)
-include(../qleveldb.pri)
+include(../profile.pri)
 
 RESOURCES += \
     systray.qrc
