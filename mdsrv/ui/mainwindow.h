@@ -36,6 +36,9 @@ private slots:
     void on_actionStop_triggered();
     void on_actionQuit_triggered();
     void on_tableWidget_cellDoubleClicked(int row, int column);
+    void on_actionInvalidParamCrash_triggered();
+    void on_actionPureCallCrash_triggered();
+    void on_actionDerefZeroCrash_triggered();
 
 private:
     void closeEvent (QCloseEvent *event) override;

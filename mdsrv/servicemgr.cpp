@@ -23,11 +23,11 @@ void ServiceMgr::init()
     }
     init_ = true;
 
-    profile_ = new Profile;
-    profile_->init();
-
     logger_ = new Logger;
     logger_->init();
+
+    profile_ = new Profile;
+    profile_->init();
 
     ctpCmdMgr_ = new CtpCmdMgr;
     ctpCmdMgr_->init();
@@ -53,13 +53,13 @@ void ServiceMgr::shutdown()
     delete ctpCmdMgr_;
     ctpCmdMgr_ = nullptr;
 
-    logger_->shutdown();
-    delete logger_;
-    logger_ = nullptr;
-
     profile_->shutdown();
     delete profile_;
     profile_ = nullptr;
+
+    logger_->shutdown();
+    delete logger_;
+    logger_ = nullptr;
 
     shutdown_ = true;
 }

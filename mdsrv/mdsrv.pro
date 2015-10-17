@@ -54,6 +54,7 @@ FORMS    += ui/mainwindow.ui \
 include(../ctpsdk.pri)
 include(../leveldb.pri)
 include(../profile.pri)
+include(../crashhandler.pri)
 
 RESOURCES += \
     systray.qrc

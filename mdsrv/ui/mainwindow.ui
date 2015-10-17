@@ -67,6 +67,10 @@
      <string>about</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="separator"/>
+    <addaction name="actionInvalidParamCrash"/>
+    <addaction name="actionPureCallCrash"/>
+    <addaction name="actionDerefZeroCrash"/>
    </widget>
    <addaction name="menuSystem"/>
    <addaction name="menuAbout"/>
@@ -100,6 +104,21 @@
   <action name="actionQuit">
    <property name="text">
     <string>quit</string>
+   </property>
+  </action>
+  <action name="actionInvalidParamCrash">
+   <property name="text">
+    <string>InvalidParamCrash</string>
+   </property>
+  </action>
+  <action name="actionPureCallCrash">
+   <property name="text">
+    <string>PureCallCrash</string>
+   </property>
+  </action>
+  <action name="actionDerefZeroCrash">
+   <property name="text">
+    <string>DerefZeroCrash</string>
    </property>
   </action>
  </widget>

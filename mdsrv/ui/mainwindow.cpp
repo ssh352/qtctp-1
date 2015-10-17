@@ -45,15 +45,17 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::init(){
+void MainWindow::init()
+{
     // logger
-    QObject::connect(logger(),&Logger::info,this,&MainWindow::onInfo);
+    QObject::connect(logger(), &Logger::info, this, &MainWindow::onInfo);
     // ctpmgr
-    QObject::connect(g_sm->ctpMgr(),&CtpMgr::gotIds,this,&MainWindow::onGotIds);
-    QObject::connect(g_sm->ctpMgr(),&CtpMgr::gotMdItem,this,&MainWindow::onGotMdItem);
+    QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotIds, this, &MainWindow::onGotIds);
+    QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotMdItem, this, &MainWindow::onGotMdItem);
 }
 
-void MainWindow::shutdown(){
+void MainWindow::shutdown()
+{
 }
 
 void MainWindow::onInfo(QString msg)
@@ -104,7 +106,7 @@ void MainWindow::on_actionStart_triggered()
     QString password = dlg.getPassword();
 
     //start
-    if (!g_sm->ctpMgr()->start(password)){
+    if (!g_sm->ctpMgr()->start(password)) {
         return;
     }
 
@@ -241,10 +243,33 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
     form->show();
 }
 
-Profile* MainWindow::profile(){
+Profile* MainWindow::profile()
+{
     return g_sm->profile();
 }
 
-Logger* MainWindow::logger(){
+Logger* MainWindow::logger()
+{
     return g_sm->logger();
+}
+
+void MainWindow::on_actionInvalidParamCrash_triggered()
+{
+    //InvalidParamCrash
+    printf(nullptr);
+}
+
+void MainWindow::on_actionPureCallCrash_triggered()
+{
+    //PureCallCrash
+    base::debug::Derived derived;
+    base::debug::Alias(&derived);
+}
+
+void MainWindow::on_actionDerefZeroCrash_triggered()
+{
+    //DerefZeroCrash
+    int* x = 0;
+    *x = 1;
+    base::debug::Alias(x);
 }

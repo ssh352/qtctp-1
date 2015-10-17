@@ -40,3 +40,39 @@ QString gbk2utf16(char* gbk){
     QString utf16 = codec->toUnicode(gbk);
     return utf16;
 }
+
+namespace base {
+namespace debug {
+
+#if defined(COMPILER_MSVC)
+#pragma optimize("", off)
+#endif
+
+void Alias(const void* var) {
+}
+
+#if defined(COMPILER_MSVC)
+#pragma optimize("", on)
+#endif
+
+Base::Base(Derived* derived)
+    : derived_(derived) {
+}
+
+Base::~Base() {
+  derived_->DoSomething();
+}
+
+#pragma warning(push)
+#pragma warning(disable:4355)
+// Disable warning C4355: 'this' : used in base member initializer list.
+Derived::Derived()
+    : Base(this) {  // C4355
+}
+#pragma warning(pop)
+
+void Derived::DoSomething() {
+}
+
+}  // namespace debug
+}  // namespace base
