@@ -7,11 +7,9 @@ INCLUDEPATH += \
 HEADERS += \
     $$SOURCE_DIR/qleveldb.h \
     $$SOURCE_DIR/qleveldbbatch.h \
-    $$SOURCE_DIR/qleveldboptions.h \
-    $$SOURCE_DIR/qleveldbglobal.h \
+    $$SOURCE_DIR/json_utils.h \
 
 SOURCES += \
     $$SOURCE_DIR/qleveldb.cpp \
     $$SOURCE_DIR/qleveldbbatch.cpp \
-    $$SOURCE_DIR/qleveldboptions.cpp \
-    $$SOURCE_DIR/qleveldbglobal.cpp \
+    $$SOURCE_DIR/json_utils.cpp \

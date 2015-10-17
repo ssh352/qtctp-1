@@ -18,11 +18,13 @@ ConfigDialog::~ConfigDialog()
 
 void ConfigDialog::Save(){
     Profile* profile = g_sm->profile();
-    profile->put("userId",ui->userId->text());
-    profile->put("brokerId",ui->brokerId->text());
-    profile->put("frontMd",ui->frontMd->text());
-    profile->put("frontTd",ui->frontTd->text());
-    profile->put("idPrefixList",ui->idPrefixList->text());
+    profile->batchBegin();
+    profile->putBatch("userId",ui->userId->text());
+    profile->putBatch("brokerId",ui->brokerId->text());
+    profile->putBatch("frontMd",ui->frontMd->text());
+    profile->putBatch("frontTd",ui->frontTd->text());
+    profile->putBatch("idPrefixList",ui->idPrefixList->text());
+    profile->batchCommit();
 }
 
 void ConfigDialog::Load(){

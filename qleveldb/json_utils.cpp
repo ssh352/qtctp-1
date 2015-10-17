@@ -1,16 +1,11 @@
-#include "qleveldbglobal.h"
+#include "json_utils.h"
 
 #include <QtCore>
-#include <QJsonDocument>
-#include <QJsonObject>
 //#include <QJSValue>
-#include <QString>
-
-QT_BEGIN_NAMESPACE
 
 QString variantToJson(const QVariant variant)
 {
-    QJsonDocument doc= QJsonDocument(variantToJsonObject(variant));
+    QJsonDocument doc = QJsonDocument(variantToJsonObject(variant));
     QString result = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
     return result;
 }
@@ -76,7 +71,7 @@ QJsonObject variantToJsonObject(QVariant variant)
         sub.insert(QStringLiteral("width"), r.width());
         sub.insert(QStringLiteral("height"), r.height());
         doc.insert(QStringLiteral("type"), QStringLiteral("rectf"));
-        doc.insert(QStringLiteral("data"),sub);
+        doc.insert(QStringLiteral("data"), sub);
         break;
     }
     case QVariant::Size: {
@@ -135,7 +130,7 @@ QJsonObject variantToJsonObject(QVariant variant)
         doc.insert(QStringLiteral("data"), sub);
         break;
     }
-    case QMetaType::QDateTime:{
+    case QMetaType::QDateTime: {
         QDateTime datetime = qvariant_cast<QDateTime>(object);
         doc.insert(QStringLiteral("type"), QStringLiteral("datetime"));
         doc.insert(QStringLiteral("data"), datetime.toString(QStringLiteral("yyyy-MM-ddTHH:mm:ss.zzzTZD")));
@@ -145,7 +140,7 @@ QJsonObject variantToJsonObject(QVariant variant)
     case QMetaType::QVariantMap: {
         QVariantMap map = object.toMap();
         QJsonObject sub;
-        for(auto key : map.keys()){
+        for (auto key : map.keys()) {
             sub.insert(key, variantToJsonObject(map[key]));
         }
         doc.insert(QStringLiteral("type"), QStringLiteral("object"));
@@ -155,7 +150,7 @@ QJsonObject variantToJsonObject(QVariant variant)
     case QMetaType::QVariantList: {
         QVariantList list = object.toList();
         QJsonArray ary;
-        for(auto elem : list){
+        for (auto elem : list) {
             ary.append(variantToJsonObject(elem));
         }
         doc.insert(QStringLiteral("type"), QStringLiteral("list"));
@@ -187,92 +182,91 @@ QVariant jsonToVariant(QString json)
 {
     QJsonDocument document = QJsonDocument::fromJson(json.toUtf8());
     QJsonObject object = document.object();
-    return jsonToVariant(object);
+    return jsonObjectToVariant(object);
 }
 
-
-QVariant jsonToVariant(QJsonObject object)
+QVariant jsonObjectToVariant(QJsonObject object)
 {
-    if (object.isEmpty()){
+    if (object.isEmpty()) {
         return QVariant();
     }
     if (object.value(QStringLiteral("type")) == QStringLiteral("primitive"))
         return object.value(QStringLiteral("data")).toVariant();
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("uuid")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("uuid")) {
         QString data = object.value(QStringLiteral("data")).toString();
         return QVariant(QUuid(data));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("point")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("point")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QPoint(data.value(QStringLiteral("x")).toInt(), data.value(QStringLiteral("y")).toInt()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("pointf")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("pointf")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QPoint(data.value(QStringLiteral("x")).toDouble(), data.value(QStringLiteral("y")).toDouble()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("rect")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("rect")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QRect(data.value(QStringLiteral("x")).toInt(),
-                              data.value(QStringLiteral("y")).toInt(),
-                              data.value(QStringLiteral("width")).toInt(),
-                              data.value(QStringLiteral("height")).toInt()));
+            data.value(QStringLiteral("y")).toInt(),
+            data.value(QStringLiteral("width")).toInt(),
+            data.value(QStringLiteral("height")).toInt()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("rectf")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("rectf")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QRectF(data.value(QStringLiteral("x")).toDouble(),
-                               data.value(QStringLiteral("y")).toDouble(),
-                               data.value(QStringLiteral("width")).toDouble(),
-                               data.value(QStringLiteral("height")).toDouble()));
+            data.value(QStringLiteral("y")).toDouble(),
+            data.value(QStringLiteral("width")).toDouble(),
+            data.value(QStringLiteral("height")).toDouble()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("size")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("size")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QSize(data.value(QStringLiteral("width")).toInt(), data.value(QStringLiteral("height")).toInt()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("sizef")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("sizef")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QSizeF(data.value(QStringLiteral("width")).toDouble(), data.value(QStringLiteral("height")).toDouble()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("bytearray")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("bytearray")) {
         QVariant data = object.value(QStringLiteral("data")).toVariant();
         return QVariant(QByteArray(data.value<QByteArray>()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("keysequence")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("keysequence")) {
         return object.value(QStringLiteral("data")).toString();
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("date")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("date")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QDate(data.value(QStringLiteral("year")).toInt(),
-                              data.value(QStringLiteral("month")).toInt(),
-                              data.value(QStringLiteral("day")).toInt()));
+            data.value(QStringLiteral("month")).toInt(),
+            data.value(QStringLiteral("day")).toInt()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("time")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("time")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         return QVariant(QTime(data.value(QStringLiteral("hour")).toInt(),
-                              data.value(QStringLiteral("minute")).toInt(),
-                              data.value(QStringLiteral("second")).toInt(),
-                              data.value(QStringLiteral("msec")).toInt()));
+            data.value(QStringLiteral("minute")).toInt(),
+            data.value(QStringLiteral("second")).toInt(),
+            data.value(QStringLiteral("msec")).toInt()));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("datetime")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("datetime")) {
         QString data = object.value(QStringLiteral("data")).toString();
         return QVariant(QDateTime::fromString(data, QStringLiteral("yyyy-MM-ddTHH:mm:ss.zzzTZD")));
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("list")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("list")) {
         QJsonArray ary = object.value(QStringLiteral("data")).toArray();
         QVariantList list;
-        for(auto obj : ary){
-            list.append(jsonToVariant(obj.toObject()));
+        for (auto obj : ary) {
+            list.append(jsonObjectToVariant(obj.toObject()));
         }
         return list;
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("object")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("object")) {
         QJsonObject data = object.value(QStringLiteral("data")).toObject();
         QVariantMap map;
-        for(auto key : data.keys()){
-            map.insert(key, jsonToVariant(data[key].toObject()));
+        for (auto key : data.keys()) {
+            map.insert(key, jsonObjectToVariant(data[key].toObject()));
         }
         return map;
     }
-    else if (object.value(QStringLiteral("type")) == QStringLiteral("variant")){
+    else if (object.value(QStringLiteral("type")) == QStringLiteral("variant")) {
 #ifndef QT_NO_DATASTREAM
         QString data = object.value(QStringLiteral("data")).toString();
         QByteArray a(data.toLatin1().mid(9));
@@ -287,6 +281,3 @@ QVariant jsonToVariant(QJsonObject object)
     }
     return QVariant();
 }
-
-QT_END_NAMESPACE
-
