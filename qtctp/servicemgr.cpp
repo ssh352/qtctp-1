@@ -37,7 +37,6 @@ void ServiceMgr::init()
 
     dataPump_ = new DataPump;
     dataPump_->init();
-
 }
 
 //注意shutdown的顺序，先shutdown的可以访问之后的=
@@ -107,7 +106,8 @@ CtpMgr* ServiceMgr::ctpMgr()
     return this->ctpMgr_;
 }
 
-DataPump* ServiceMgr::dataPump(){
+DataPump* ServiceMgr::dataPump()
+{
     check();
 
     return this->dataPump_;

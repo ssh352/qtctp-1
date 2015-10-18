@@ -67,5 +67,3 @@ include(../crashhandler.pri)
 RESOURCES += \
     systray.qrc
 
-DISTFILES += \
-    readme.txt

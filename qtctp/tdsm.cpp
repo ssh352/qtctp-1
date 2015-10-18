@@ -113,7 +113,8 @@ private:
         idPrefixList_.clear();
     }
 
-    void info(QString msg){
+    void info(QString msg)
+    {
         g_sm->logger()->info(msg);
     }
 
@@ -144,8 +145,8 @@ bool TdSm::init(QString userId, QString password, QString brokerId, QString fron
 
     // check
     if (userId_.length() == 0 || password_.length() == 0
-            || brokerId_.length() == 0 || frontTd_.length() == 0 || flowPathTd_.length() == 0
-            || idPrefixList_.length() == 0 ) {
+        || brokerId_.length() == 0 || frontTd_.length() == 0 || flowPathTd_.length() == 0
+        || idPrefixList_.length() == 0) {
         return false;
     }
 
@@ -205,7 +206,7 @@ QString TdSm::version()
     return TraderApi::GetApiVersion();
 }
 
-void TdSm::info(QString msg){
+void TdSm::info(QString msg)
+{
     g_sm->logger()->info(msg);
 }
-

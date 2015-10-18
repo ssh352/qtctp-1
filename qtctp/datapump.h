@@ -7,11 +7,10 @@
 
 class RingBuffer;
 
-class DataPump : public QObject
-{
+class DataPump : public QObject {
     Q_OBJECT
 public:
-    explicit DataPump(QObject *parent = 0);
+    explicit DataPump(QObject* parent = 0);
     void init();
     void shutdown();
     void put(void* mdItem);
@@ -25,8 +24,8 @@ signals:
 public slots:
 
 private:
-    void* saveRb(void* mdItem, int& indexRb,RingBuffer*& rb);
-    void fixTickMs(void* mdItem, int indexRb,RingBuffer* rb);
+    void* saveRb(void* mdItem, int& indexRb, RingBuffer*& rb);
+    void fixTickMs(void* mdItem, int indexRb, RingBuffer* rb);
 
 private:
     QMap<QString, RingBuffer*> rbs_;
