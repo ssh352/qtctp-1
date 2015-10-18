@@ -2,6 +2,9 @@
 
 #include <QtCore>
 //#include <QJSValue>
+#include <QScriptValue>
+
+Q_DECLARE_METATYPE(QScriptValue)
 
 QString variantToJson(const QVariant variant)
 {
@@ -20,6 +23,10 @@ QJsonObject variantToJsonObject(QVariant variant)
     //    QJSValue value = variant.value<QJSValue>();
     //    object = value.toVariant();
     //}
+    if (object.userType() == qMetaTypeId<QScriptValue>()){
+        QScriptValue value = variant.value<QScriptValue>();
+        object = value.toVariant();
+    }
 
     switch (object.type()) {
     case QVariant::Invalid:

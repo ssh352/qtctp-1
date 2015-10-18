@@ -4,11 +4,11 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui script
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = mdsrv
+TARGET = qtctp
 TEMPLATE = app
 
 win32-msvc*:QMAKE_CXXFLAGS_WARN_ON -= -w34100
