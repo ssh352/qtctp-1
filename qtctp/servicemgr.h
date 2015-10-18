@@ -7,6 +7,7 @@ class Profile;
 class Logger;
 class CtpCmdMgr;
 class CtpMgr;
+class DataPump;
 
 class ServiceMgr : public QObject {
     Q_OBJECT
@@ -20,6 +21,7 @@ public:
     Logger* logger();
     CtpCmdMgr* ctpCmdMgr();
     CtpMgr* ctpMgr();
+    DataPump* dataPump();
 
 signals:
 
@@ -33,6 +35,7 @@ private:
     Logger* logger_ = nullptr;
     CtpCmdMgr* ctpCmdMgr_ = nullptr;
     CtpMgr* ctpMgr_ = nullptr;
+    DataPump* dataPump_ = nullptr;
 
     bool shutdown_ = false;
     bool init_ = false;

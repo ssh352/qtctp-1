@@ -22,7 +22,6 @@ public:
 
 signals:
     void gotIds(QStringList ids);
-    void gotMdItem(void* item);
 
 private slots:
     void onMdSmStateChanged(int state);

@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "ctpcmdmgr.h"
 #include "ctpmgr.h"
+#include "datapump.h"
 
 ServiceMgr* g_sm = nullptr;
 
@@ -13,7 +14,6 @@ ServiceMgr::ServiceMgr(QObject* parent)
 }
 
 //注意init的顺序，后面init的可以访问之前的=
-//todo(sunwangme):按需构造=
 void ServiceMgr::init()
 {
     // 调用init前，所有的访问都fatal=
@@ -34,6 +34,10 @@ void ServiceMgr::init()
 
     ctpMgr_ = new CtpMgr;
     ctpMgr_->init();
+
+    dataPump_ = new DataPump;
+    dataPump_->init();
+
 }
 
 //注意shutdown的顺序，先shutdown的可以访问之后的=
@@ -44,6 +48,10 @@ void ServiceMgr::shutdown()
         qFatal("shutdown_ == true");
         return;
     }
+
+    dataPump_->shutdown();
+    delete dataPump_;
+    dataPump_ = nullptr;
 
     ctpMgr_->shutdown();
     delete ctpMgr_;
@@ -97,4 +105,10 @@ CtpMgr* ServiceMgr::ctpMgr()
     check();
 
     return this->ctpMgr_;
+}
+
+DataPump* ServiceMgr::dataPump(){
+    check();
+
+    return this->dataPump_;
 }

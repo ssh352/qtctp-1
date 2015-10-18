@@ -15,6 +15,7 @@
 #include "profile.h"
 #include "logger.h"
 #include "ctpmgr.h"
+#include "datapump.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -53,7 +54,7 @@ void MainWindow::init()
     QObject::connect(logger(), &Logger::info, this, &MainWindow::onInfo);
     // ctpmgr
     QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotIds, this, &MainWindow::onGotIds);
-    QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotMdItem, this, &MainWindow::onGotMdItem);
+    QObject::connect(g_sm->dataPump(), &DataPump::gotMdItem, this, &MainWindow::onGotMdItem);
 }
 
 void MainWindow::shutdown()
@@ -130,7 +131,7 @@ void MainWindow::on_actionStop_triggered()
     ui->actionStop->setEnabled(false);
 }
 
-void MainWindow::onGotMdItem(void* p)
+void MainWindow::onGotMdItem(void* p, int indexRb, void* rb)
 {
     auto mdf = (DepthMarketDataField*)p;
 

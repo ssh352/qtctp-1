@@ -8,6 +8,7 @@
 #include "servicemgr.h"
 #include "ctpcmdmgr.h"
 #include "logger.h"
+#include "datapump.h"
 
 ///////////
 class MdSmSpi : public MdSpi {
@@ -77,9 +78,7 @@ private:
 
     void OnRtnDepthMarketData(DepthMarketDataField* pDepthMarketData) override
     {
-        int indexRb = -1;
-        void* item = sm()->saveRb(pDepthMarketData, indexRb);
-        emit sm()->gotMdItem(item, indexRb);
+        g_sm->dataPump()->put(pDepthMarketData);
     }
 
 private:
@@ -165,7 +164,7 @@ void MdSm::start()
     mdapi_ = nullptr;
     delete mdspi_;
     mdspi_ = nullptr;
-    freeRb();
+    //freeRb();
 }
 
 void MdSm::stop()
@@ -183,7 +182,7 @@ void MdSm::stop()
 
 void MdSm::subscrible(QStringList ids)
 {
-    initRb(ids);
+    //initRb(ids);
     info("MdSm::subscrible");
     emit this->runCmd(new CmdMdSubscrible(ids));
 }
@@ -191,49 +190,6 @@ void MdSm::subscrible(QStringList ids)
 QString MdSm::version()
 {
     return MdApi::GetApiVersion();
-}
-
-//todo(sunwangme)
-//断网自动重连后再次走这里，先free再来=
-//这里神马时候释放得想想：disconnect or reconnect？=
-void MdSm::initRb(QStringList ids){
-    if(rbs_.count()){
-        freeRb();
-    }
-
-    for(int i=0;i<ids.count();i++){
-        QString id = ids.at(i);
-        RingBuffer* rb = new RingBuffer;
-        rb->init(sizeof(DepthMarketDataField), ringBufferLen_);
-        rbs_.insert(id, rb);
-    }
-}
-
-void MdSm::freeRb()
-{
-    auto rb_list = rbs_.values();
-    for (int i = 0; i < rb_list.length(); i++) {
-        RingBuffer* rb = rb_list.at(i);
-        rb->free();
-        delete rb;
-    }
-    rbs_.clear();
-}
-
-void* MdSm::saveRb(void* mdItem, int& index)
-{
-    DepthMarketDataField* mdf = (DepthMarketDataField*)mdItem;
-    QString id = mdf->InstrumentID;
-    RingBuffer* rb = rbs_.value(id);
-    if (rb == nullptr) {
-        qFatal("rb == nullptr");
-    }
-
-    return rb->put(mdItem, index);
-}
-
-RingBuffer* MdSm::getRingBuffer(QString id){
-    return rbs_.value(id);
 }
 
 void MdSm::info(QString msg){

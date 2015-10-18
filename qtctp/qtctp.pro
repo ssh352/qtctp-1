@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     ringbuffer.cpp \
     tdsm.cpp \
     ctpcmdmgr.cpp \
-    ctpmgr.cpp
+    ctpmgr.cpp \
+    datapump.cpp
 
 HEADERS  += ui/mainwindow.h \
     ui/configdialog.h \
@@ -50,7 +51,8 @@ HEADERS  += ui/mainwindow.h \
     ringbuffer.h \
     tdsm.h \
     ctpcmdmgr.h \
-    ctpmgr.h
+    ctpmgr.h \
+    datapump.h
 
 FORMS    += ui/mainwindow.ui \
     ui/configdialog.ui \
@@ -64,3 +66,6 @@ include(../crashhandler.pri)
 
 RESOURCES += \
     systray.qrc
+
+DISTFILES += \
+    readme.txt

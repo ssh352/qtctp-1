@@ -5,7 +5,7 @@
 #include "ringbuffer.h"
 #include "servicemgr.h"
 #include "ctpmgr.h"
-#include "mdsm.h"
+#include "datapump.h"
 
 TickForm::TickForm(QWidget* parent)
     : QWidget(parent)
@@ -37,15 +37,15 @@ void TickForm::Init(QString id)
 
 void TickForm::scanMd()
 {
-    MdSm* mdsm = g_sm->ctpMgr()->mdsm();
-    if(!mdsm){
+    DataPump* datapump = g_sm->dataPump();
+    if(!datapump){
         return;
     }
 
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    RingBuffer* rb = mdsm->getRingBuffer(id_);
+    RingBuffer* rb = datapump->getRingBuffer(id_);
     if (rb == nullptr) {
         return;
     }

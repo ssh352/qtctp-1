@@ -8,6 +8,7 @@
 #include "logger.h"
 #include <QThread>
 #include "ctpcmdmgr.h"
+#include "datapump.h"
 
 CtpMgr::CtpMgr(QObject* parent)
     : QObject(parent)
@@ -30,6 +31,7 @@ void CtpMgr::shutdown()
 void CtpMgr::onMdSmStateChanged(int state)
 {
     if (state == MDSM_STOPPED) {
+        g_sm->dataPump()->freeRb();
         mdsm_thread_->quit();
         mdsm_thread_ = nullptr;
         mdsm_ = nullptr;
@@ -116,7 +118,6 @@ bool CtpMgr::start(QString password)
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_, &MdSm::deleteLater, Qt::QueuedConnection);
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_thread_, &QThread::deleteLater, Qt::QueuedConnection);
     QObject::connect(mdsm_, &MdSm::statusChanged, this, &CtpMgr::onMdSmStateChanged, Qt::QueuedConnection);
-    QObject::connect(mdsm_, &MdSm::gotMdItem, this, &CtpMgr::gotMdItem, Qt::QueuedConnection);
     mdsm_thread_->start();
     return true;
 }
@@ -134,6 +135,9 @@ void CtpMgr::stop()
 
 void CtpMgr::onGotIds(QStringList ids)
 {
+    //初始化datapump
+    g_sm->dataPump()->initRb(ids);
+
     // 转发=
     emit this->gotIds(ids);
 
