@@ -13,7 +13,6 @@ Logger::Logger(QObject* parent)
 
 void Logger::init()
 {
-#if 1
     // Disable the message box for assertions.(see setcrt)
     _CrtSetReportMode(_CRT_ASSERT, 0);
 
@@ -21,7 +20,6 @@ void Logger::init()
     UINT new_flags = SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
     UINT existing_flags = SetErrorMode(new_flags);
     SetErrorMode(existing_flags | new_flags);
-#endif
 
     CrashManager::CrashHandler::instance()->Init(qApp->applicationDirPath(), "c:/windows/system32/notepad.exe");
 }

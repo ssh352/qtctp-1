@@ -83,7 +83,7 @@ void MainWindow::onGotIds(QStringList ids)
     }
 }
 
-void MainWindow::on_actionAbout_triggered()
+void MainWindow::on_actionVersion_triggered()
 {
     logger()->info(QString("qtctp version: ") + QString(__DATE__) +" " + QString(__TIME__));
     logger()->info(QString("mdapi version: ") + MdSm::version());

@@ -30,7 +30,7 @@ public slots:
 
 private slots:
     void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
-    void on_actionAbout_triggered();
+    void on_actionVersion_triggered();
     void on_actionConfig_triggered();
     void on_actionStart_triggered();
     void on_actionStop_triggered();
