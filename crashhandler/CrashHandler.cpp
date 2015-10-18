@@ -56,6 +56,26 @@
 
 #endif
 
+namespace {
+// Minidump with stacks, PEB, TEB, and unloaded module list.
+const MINIDUMP_TYPE kSmallDumpType = static_cast<MINIDUMP_TYPE>(
+    MiniDumpWithProcessThreadData | // Get PEB and TEB.
+    MiniDumpWithHandleData | MiniDumpWithUnloadedModules); // Get unloaded modules when available.
+
+// Minidump with all of the above, plus memory referenced from stack.
+const MINIDUMP_TYPE kLargerDumpType = static_cast<MINIDUMP_TYPE>(
+    MiniDumpWithProcessThreadData | // Get PEB and TEB.
+    MiniDumpWithHandleData | MiniDumpWithUnloadedModules | // Get unloaded modules when available.
+    MiniDumpWithIndirectlyReferencedMemory); // Get memory referenced by stack.
+
+// Large dump with all process memory.
+const MINIDUMP_TYPE kFullDumpType = static_cast<MINIDUMP_TYPE>(
+    MiniDumpWithFullMemory | // Full memory from process.
+    MiniDumpWithProcessThreadData | // Get PEB and TEB.
+    MiniDumpWithHandleData | // Get all handle information.
+    MiniDumpWithUnloadedModules); // Get unloaded modules when available.
+}
+
 namespace CrashManager {
 /************************************************************************/
 /* CrashHandlerPrivate                                                  */
@@ -233,9 +253,11 @@ void CrashHandlerPrivate::InitCrashHandler(const QString& dumpPath)
         pathAsStr,
         /*FilterCallback*/ 0,
         DumpCallback,
-        /*context*/
-        0,
-        google_breakpad::ExceptionHandler::HANDLER_ALL);
+        /*context*/ 0,
+        google_breakpad::ExceptionHandler::HANDLER_ALL,
+        kLargerDumpType,
+        (HANDLE)NULL, // pipe_handle
+        NULL); // crash_generation_client
 #elif defined(Q_OS_LINUX)
     std::string pathAsStr = dumpPath.toStdString();
     google_breakpad::MinidumpDescriptor md(pathAsStr);
@@ -244,7 +266,7 @@ void CrashHandlerPrivate::InitCrashHandler(const QString& dumpPath)
         /*FilterCallback*/ 0,
         DumpCallback,
         /*context*/ 0,
-        google_breakpad::ExceptionHandler::HANDLER_ALL,
+        true,
         -1);
 #elif defined(Q_OS_MAC)
     std::string pathAsStr = dumpPath.toStdString();
@@ -252,9 +274,8 @@ void CrashHandlerPrivate::InitCrashHandler(const QString& dumpPath)
         pathAsStr,
         /*FilterCallback*/ 0,
         DumpCallback,
-        /*context*/
-        0,
-        google_breakpad::ExceptionHandler::HANDLER_ALL,
+        /*context*/ 0,
+        true,
         NULL);
 #endif
 }
@@ -295,14 +316,14 @@ bool CrashHandler::writeMinidump()
     return res;
 }
 
-void CrashHandler::Init(const QString& dumpPath,const QString& reporter,const QString& params)
+void CrashHandler::Init(const QString& dumpPath, const QString& reporter, const QString& params)
 {
     d->InitCrashHandler(dumpPath);
 
-    setReporter(reporter,params);
+    setReporter(reporter, params);
 }
 
-void CrashHandler::setReporter(const QString& reporter,const QString& params)
+void CrashHandler::setReporter(const QString& reporter, const QString& params)
 {
     QString rep = reporter;
 
