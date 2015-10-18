@@ -23,11 +23,13 @@ class CrashHandlerPrivate;
 class CrashHandler {
 public:
     static CrashHandler* instance();
-    void Init(const QString& dumpPath, const QString& reporter);
+    void Init(const QString& dumpPath, const QString& reporter,const QString& params);
 
     void setReportCrashesToSystem(bool report);
-    void setReporter(const QString& reporter);
     bool writeMinidump();
+
+private:
+    void setReporter(const QString& reporter,const QString& params);
 
 private:
     CrashHandler();

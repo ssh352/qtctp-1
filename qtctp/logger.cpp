@@ -21,7 +21,14 @@ void Logger::init()
     UINT existing_flags = SetErrorMode(new_flags);
     SetErrorMode(existing_flags | new_flags);
 
-    CrashManager::CrashHandler::instance()->Init(qApp->applicationDirPath(), "c:/windows/system32/notepad.exe");
+    QString reporter = "C:/Program Files (x86)/Windows Kits/8.0/Debuggers/x86/windbg.exe";
+    QString params = " -z";
+    if (!QDir().exists(reporter)) {
+        reporter = "c:/windows/system32/notepad.exe";
+        params = "";
+    }
+
+    CrashManager::CrashHandler::instance()->Init(qApp->applicationDirPath(), reporter, params);
 }
 
 void Logger::shutdown()

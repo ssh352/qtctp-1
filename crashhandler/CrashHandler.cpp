@@ -295,14 +295,14 @@ bool CrashHandler::writeMinidump()
     return res;
 }
 
-void CrashHandler::Init(const QString& dumpPath,const QString& reporter)
+void CrashHandler::Init(const QString& dumpPath,const QString& reporter,const QString& params)
 {
     d->InitCrashHandler(dumpPath);
 
-    setReporter(reporter);
+    setReporter(reporter,params);
 }
 
-void CrashHandler::setReporter(const QString& reporter)
+void CrashHandler::setReporter(const QString& reporter,const QString& params)
 {
     QString rep = reporter;
 
@@ -328,6 +328,8 @@ void CrashHandler::setReporter(const QString& reporter)
     Q_ASSERT(QDir::isAbsolutePath(rep));
 
     Q_ASSERT(QDir().exists(rep));
+
+    rep += params;
 
     qstrcpy(d->reporter_, QFile::encodeName(rep).data());
 }

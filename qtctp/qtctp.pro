@@ -11,8 +11,14 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = qtctp
 TEMPLATE = app
 
+# warn
 win32-msvc*:QMAKE_CXXFLAGS_WARN_ON -= -w34100
 win32-msvc*:QMAKE_CXXFLAGS += -wd4819
+
+# pdb
+win32-msvc*:QMAKE_CFLAGS_RELEASE += -Zi
+win32-msvc*:QMAKE_CXXFLAGS_RELEASE += -Zi
+win32-msvc*:QMAKE_LFLAGS_RELEASE += /DEBUG /OPT:REF
 
 INCLUDEPATH += \
     $$PWD
