@@ -10,6 +10,8 @@ CtpCmdMgr::CtpCmdMgr(QObject* parent)
 
 void CtpCmdMgr::init()
 {
+    setInterval(100);
+    start();
 }
 
 void CtpCmdMgr::shutdown()

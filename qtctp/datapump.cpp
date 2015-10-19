@@ -23,72 +23,12 @@ void DataPump::init()
 
     QObject::connect(db_thread_, &QThread::started, db_backend_, &LevelDBBackend::init);
     QObject::connect(db_thread_, &QThread::finished, db_backend_, &LevelDBBackend::shutdown);
-    QObject::connect(this, &DataPump::gotMdItem, db_backend_, &LevelDBBackend::onGotMdItem);
+
+    QObject::connect(this, &DataPump::gotMdItem, db_backend_, &LevelDBBackend::put);
+    QObject::connect(this, &DataPump::freedRb, db_backend_, &LevelDBBackend::freeDb);
+    QObject::connect(this, &DataPump::initedRb, db_backend_, &LevelDBBackend::initDb);
 
     db_thread_->start();
-}
-
-void DataPump::test()
-{
-    QDir dir = QDir(QDir::home().absoluteFilePath("qtctp/data"));
-    dir.setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
-    QStringList ids = dir.entryList();
-    for (auto id : ids) {
-        QString path = QDir::home().absoluteFilePath("qtctp/data/") + id + "/tick";
-        mkDir(path);
-        leveldb::Options options;
-        options.create_if_missing = true;
-        options.error_if_exists = false;
-        options.compression = leveldb::kNoCompression;
-        options.paranoid_checks = false;
-        leveldb::DB* db;
-        leveldb::Status status = leveldb::DB::Open(options,
-            path.toStdString(),
-            &db);
-        if (status.ok()) {
-
-            if (0) {
-                DepthMarketDataField* mdItem = new (DepthMarketDataField);
-                memset(mdItem, 0, sizeof(DepthMarketDataField));
-                QString key;
-                leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
-                leveldb::WriteOptions options;
-                key = id + "-tick=";
-                db->Put(options, key.toStdString(), val);
-                delete mdItem;
-            }
-
-            {
-                leveldb::ReadOptions options;
-                leveldb::Iterator* it = db->NewIterator(options);
-                if (!it) {
-                    return;
-                }
-                QString startKey = id + "-tick=";
-                it->Seek(leveldb::Slice(startKey.toStdString()));
-                int count = 0;
-                RingBuffer* rb = new RingBuffer;
-                rb->init(sizeof(DepthMarketDataField), 256);
-                if (it->Valid()) {
-                    it->Prev();
-                }
-                for (; it->Valid() && count < rb->count(); it->Prev()) {
-                    count++;
-                    QString key = QString::fromStdString(it->key().ToString());
-                    qDebug() << key;
-                    if (it->value().size() != sizeof(DepthMarketDataField)) {
-                        qFatal("it->value().size() != sizeof(DepthMarketDataField)");
-                    }
-                    auto mdf = (DepthMarketDataField*)it->value().data();
-                    rb->load(rb->count() - count, mdf);
-                }
-                delete rb;
-                delete it;
-            }
-
-            delete db;
-        }
-    }
 }
 
 //guithread的eventloop退了，不会处理dbthread的finish，这里应该等待线程退出，然后清理qthread对象
@@ -112,7 +52,6 @@ void DataPump::put(void* mdItem)
     emit this->gotMdItem(item, indexRb, rb);
 }
 
-//在ctpmgr线程上一次性完成ringbuffer的初始化操作=
 void DataPump::initRb(QStringList ids)
 {
     if (rbs_.count()) {
@@ -126,15 +65,11 @@ void DataPump::initRb(QStringList ids)
         rbs_.insert(id, rb);
     }
 
-    db_backend_->initDb(ids);
-    loadRbFromBackend(ids);
+    emit initedRb(ids);
 }
 
-//在ctpmgr线程上一次性完成ringbuffer的析构操作=
 void DataPump::freeRb()
 {
-    db_backend_->freeDb();
-
     auto rb_list = rbs_.values();
     for (int i = 0; i < rb_list.length(); i++) {
         RingBuffer* rb = rb_list.at(i);
@@ -142,6 +77,8 @@ void DataPump::freeRb()
         delete rb;
     }
     rbs_.clear();
+
+    emit freedRb();
 }
 
 void* DataPump::saveRb(void* mdItem, int& index, RingBuffer*& rb)
@@ -179,37 +116,6 @@ void DataPump::fixTickMs(void* mdItem, int indexRb, RingBuffer* rb)
     }
 }
 
-void DataPump::loadRbFromBackend(QStringList ids)
-{
-    for (auto id : ids) {
-        auto rb = getRingBuffer(id);
-        auto db = db_backend_->getLevelDB(id);
-
-        leveldb::ReadOptions options;
-        leveldb::Iterator* it = db->NewIterator(options);
-        if (!it) {
-            return;
-        }
-        //第一个是ID-tick-
-        //最后一个是ID-tick=
-        QString startKey = id + "-tick=";
-        it->Seek(leveldb::Slice(startKey.toStdString()));
-        if (it->Valid()) {
-            it->Prev();
-        }
-        int count = 0;
-        for (; it->Valid() && count < rb->count(); it->Prev()) {
-            count++;
-            if (it->value().size() != sizeof(DepthMarketDataField)) {
-                qFatal("it->value().size() != sizeof(DepthMarketDataField)");
-            }
-            auto mdf = (DepthMarketDataField*)it->value().data();
-            rb->load(rb->count() - count, mdf);
-        }
-        delete it;
-    }
-}
-
 //////
 LevelDBBackend::LevelDBBackend(QObject* parent)
     : QObject(parent)
@@ -243,7 +149,7 @@ void LevelDBBackend::shutdown()
     delete this;
 }
 
-void LevelDBBackend::onGotMdItem(void* mdItem, int indexRb, void* rb)
+void LevelDBBackend::put(void* mdItem, int indexRb, void* rb)
 {
     auto mdf = (DepthMarketDataField*)mdItem;
     QString id = mdf->InstrumentID;
@@ -259,8 +165,8 @@ void LevelDBBackend::onGotMdItem(void* mdItem, int indexRb, void* rb)
 
 void LevelDBBackend::initDb(QStringList ids)
 {
-    if (dbs_.count()) {
-        freeDb();
+    if (dbs_.count()!=0) {
+        qFatal("dbs_.count()!=0");
     }
 
     for (int i = 0; i < ids.count(); i++) {
@@ -291,6 +197,8 @@ void LevelDBBackend::initDb(QStringList ids)
             dbs_.insert(id, db);
         }
     }
+
+    loadRbFromBackend(ids);
 }
 
 void LevelDBBackend::freeDb()
@@ -306,4 +214,38 @@ void LevelDBBackend::freeDb()
 leveldb::DB* LevelDBBackend::getLevelDB(QString id)
 {
     return dbs_.value(id);
+}
+
+void LevelDBBackend::loadRbFromBackend(QStringList ids)
+{
+    for (auto id : ids) {
+        auto rb = g_sm->dataPump()->getRingBuffer(id);
+        auto db = getLevelDB(id);
+
+        leveldb::ReadOptions options;
+        leveldb::Iterator* it = db->NewIterator(options);
+        if (!it) {
+            return;
+        }
+        //第一个是ID-tick-
+        //最后一个是ID-tick=
+        QString startKey = id + "-tick=";
+        it->Seek(leveldb::Slice(startKey.toStdString()));
+        if (it->Valid()) {
+            it->Prev();
+        }
+        int count = 0;
+        for (; it->Valid() && count < rb->count(); it->Prev()) {
+            count++;
+            if (it->value().size() != sizeof(DepthMarketDataField)) {
+                qFatal("it->value().size() != sizeof(DepthMarketDataField)");
+            }
+            auto mdf = (DepthMarketDataField*)it->value().data();
+            rb->load(rb->count() - count, mdf);
+        }
+        delete it;
+    }
+
+    // 开始订阅=
+    g_sm->ctpMgr()->subscrible(ids);
 }

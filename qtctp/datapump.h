@@ -26,14 +26,14 @@ public:
 
 signals:
     void gotMdItem(void* mdItem, int indexRb, void* rb);
+    void initedRb(QStringList ids);
+    void freedRb();
 
 public slots:
 
 private:
     void* saveRb(void* mdItem, int& indexRb, RingBuffer*& rb);
     void fixTickMs(void* mdItem, int indexRb, RingBuffer* rb);
-    void loadRbFromBackend(QStringList ids);
-    void test();
 
 private:
     QMap<QString, RingBuffer*> rbs_;
@@ -49,17 +49,19 @@ public:
     ~LevelDBBackend();
     void init();
     void shutdown();
-    void freeDb();
-    void initDb(QStringList ids);
-    leveldb::DB* getLevelDB(QString id);
 
 signals:
 
 public slots:
-    void onGotMdItem(void* mdItem, int indexRb, void* rb);
+    void put(void* mdItem, int indexRb, void* rb);
+    void freeDb();
+    void initDb(QStringList ids);
 
 private:
+    void fillRb(QStringList ids);
     void diagnose(QString foo);
+    leveldb::DB* getLevelDB(QString id);
+    void loadRbFromBackend(QStringList ids);
 
 private:
     QMap<QString,leveldb::DB*> dbs_;

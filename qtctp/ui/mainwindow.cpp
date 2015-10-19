@@ -54,6 +54,9 @@ void MainWindow::init()
     QObject::connect(logger(), &Logger::info, this, &MainWindow::onInfo);
     // ctpmgr
     QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotIds, this, &MainWindow::onGotIds);
+    QObject::connect(g_sm->ctpMgr(), &CtpMgr::mdStopped, this, &MainWindow::resetUI);
+    QObject::connect(g_sm->ctpMgr(), &CtpMgr::mdDisconnect, this, &MainWindow::resetUI);
+    // datapump
     QObject::connect(g_sm->dataPump(), &DataPump::gotMdItem, this, &MainWindow::onGotMdItem);
 }
 
@@ -82,6 +85,12 @@ void MainWindow::onGotIds(QStringList ids)
         QTableWidgetItem* item = new QTableWidgetItem(id);
         ui->tableWidget->setItem(i, 0, item);
     }
+}
+
+void MainWindow::resetUI(){
+    ids_row_.clear();
+    this->ui->tableWidget->clearContents();
+    this->ui->tableWidget->setRowCount(0);
 }
 
 void MainWindow::on_actionVersion_triggered()

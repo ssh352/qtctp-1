@@ -19,9 +19,12 @@ public:
     void stop();
     bool running();
     MdSm* mdsm(){return mdsm_;}
+    void subscrible(QStringList ids);
 
 signals:
     void gotIds(QStringList ids);
+    void mdStopped();
+    void mdDisconnect();
 
 private slots:
     void onMdSmStateChanged(int state);

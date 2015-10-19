@@ -27,6 +27,7 @@ public slots:
     void onInfo(QString msg);
     void onGotIds(QStringList ids);
     void onGotMdItem(void* item,int indexRb, void* rb);
+    void resetUI();
 
 private slots:
     void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);

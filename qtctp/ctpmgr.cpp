@@ -7,7 +7,6 @@
 #include "profile.h"
 #include "logger.h"
 #include <QThread>
-#include "ctpcmdmgr.h"
 #include "datapump.h"
 
 CtpMgr::CtpMgr(QObject* parent)
@@ -17,30 +16,32 @@ CtpMgr::CtpMgr(QObject* parent)
 
 void CtpMgr::init()
 {
-    // ctpcmdmgr
-    g_sm->ctpCmdMgr()->setInterval(100);
-    g_sm->ctpCmdMgr()->start();
 }
 
 void CtpMgr::shutdown()
 {
-    // ctpcmdmgr
-    g_sm->ctpCmdMgr()->stop();
 }
 
 void CtpMgr::onMdSmStateChanged(int state)
 {
     if (state == MDSM_STOPPED) {
+        //手动退出手动收盘处理=
         g_sm->dataPump()->freeRb();
         mdsm_thread_->quit();
         mdsm_thread_->wait();
         delete mdsm_thread_;
         mdsm_thread_ = nullptr;
         mdsm_ = nullptr;
+
+        emit mdStopped();
     }
     if (state == MDSM_CONNECTED) {
     }
     if (state == MDSM_DISCONNECTED) {
+        //自动收盘处理=
+        g_sm->dataPump()->freeRb();
+
+        emit mdDisconnect();
     }
     if (state == MDSM_LOGINED) {
         //开始用tdapi查询合约列表=
@@ -140,13 +141,14 @@ void CtpMgr::onGotIds(QStringList ids)
     //初始化datapump
     g_sm->dataPump()->initRb(ids);
 
-    // 转发=
-    emit this->gotIds(ids);
-
     //退出td
     tdsm_->logout();
 
-    //开始订阅=
+    // 转发=
+    emit this->gotIds(ids);
+}
+
+void CtpMgr::subscrible(QStringList ids){
     mdsm_->subscrible(ids);
 }
 
