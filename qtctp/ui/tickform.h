@@ -18,14 +18,16 @@ public:
 
 private:
     void scanMd();
+    void onGotMdItem(void* item);
 
 private slots:
     void on_pushButton_clicked();
 
+    void on_details_clicked();
+
 private:
     Ui::TickForm *ui;
     QStringList ids_col_;
-    void onGotMdItem(void* item);
     QString id_;
 };
 

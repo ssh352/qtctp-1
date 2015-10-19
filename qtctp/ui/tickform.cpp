@@ -6,6 +6,7 @@
 #include "servicemgr.h"
 #include "ctpmgr.h"
 #include "datapump.h"
+#include "dbform.h"
 
 TickForm::TickForm(QWidget* parent)
     : QWidget(parent)
@@ -31,7 +32,7 @@ TickForm::~TickForm()
 void TickForm::Init(QString id)
 {
     id_ = id;
-    this->setWindowTitle(id);
+    this->setWindowTitle(QString("tick-")+id);
     scanMd();
 }
 
@@ -104,4 +105,12 @@ void TickForm::onGotMdItem(void* p)
 void TickForm::on_pushButton_clicked()
 {
     scanMd();
+}
+
+void TickForm::on_details_clicked()
+{
+    DbForm* form = new DbForm();
+    form->setWindowFlags(Qt::Window);
+    form->Init(id_);
+    form->show();
 }

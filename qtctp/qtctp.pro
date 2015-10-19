@@ -30,6 +30,7 @@ SOURCES += main.cpp\
     ui/configdialog.cpp \
     ui/logindialog.cpp \
     ui/tickform.cpp \
+    ui/dbform.cpp \
     servicemgr.cpp \
     profile.cpp \
     logger.cpp \
@@ -42,10 +43,12 @@ SOURCES += main.cpp\
     datapump.cpp \
     crashhandler.cpp
 
+
 HEADERS  += ui/mainwindow.h \
     ui/configdialog.h \
     ui/logindialog.h \
     ui/tickform.h \
+    ui/dbform.h \
     servicemgr.h \
     profile.h \
     logger.h \
@@ -58,10 +61,12 @@ HEADERS  += ui/mainwindow.h \
     datapump.h \
     crashhandler.h
 
+
 FORMS    += ui/mainwindow.ui \
     ui/configdialog.ui \
     ui/logindialog.ui \
-    ui/tickform.ui
+    ui/tickform.ui \
+    ui/dbform.ui
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)

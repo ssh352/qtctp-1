@@ -98,6 +98,10 @@ RingBuffer* DataPump::getRingBuffer(QString id)
     return rbs_.value(id);
 }
 
+leveldb::DB* DataPump::getLevelDB(QString id){
+    return db_backend_->getLevelDB(id);
+}
+
 // 和前一个tick比较，如果time相同，就改ms为前一个的ms+1，不同，ms改为0
 void DataPump::fixTickMs(void* mdItem, int indexRb, RingBuffer* rb)
 {
@@ -184,12 +188,16 @@ void LevelDBBackend::initDb(QStringList ids)
             &db);
         if (status.ok()) {
             // hack!!!
+            //第一个是ID-tick+
+            //最后一个是ID-tick=
             if (1) {
                 DepthMarketDataField* mdItem = new (DepthMarketDataField);
                 memset(mdItem, 0, sizeof(DepthMarketDataField));
                 QString key;
                 leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
                 leveldb::WriteOptions options;
+                key = id + "-tick+";
+                db->Put(options, key.toStdString(), val);
                 key = id + "-tick=";
                 db->Put(options, key.toStdString(), val);
                 delete mdItem;
@@ -227,7 +235,7 @@ void LevelDBBackend::loadRbFromBackend(QStringList ids)
         if (!it) {
             return;
         }
-        //第一个是ID-tick-
+        //第一个是ID-tick+
         //最后一个是ID-tick=
         QString startKey = id + "-tick=";
         it->Seek(leveldb::Slice(startKey.toStdString()));
@@ -241,6 +249,10 @@ void LevelDBBackend::loadRbFromBackend(QStringList ids)
                 qFatal("it->value().size() != sizeof(DepthMarketDataField)");
             }
             auto mdf = (DepthMarketDataField*)it->value().data();
+            //遇到了前后两个结束item
+            if(mdf->ActionDay[0]==0){
+                break;
+            }
             rb->load(rb->count() - count, mdf);
         }
         delete it;

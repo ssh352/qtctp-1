@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TickForm</class>
- <widget class="QWidget" name="TickForm">
+ <class>DbForm</class>
+ <widget class="QWidget" name="DbForm">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>635</width>
-    <height>401</height>
+    <width>679</width>
+    <height>470</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,21 +17,35 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="first128">
        <property name="text">
-        <string>refresh</string>
+        <string>first128</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="details">
+      <widget class="QPushButton" name="next128">
        <property name="text">
-        <string>details</string>
+        <string>next128</string>
        </property>
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
+      <widget class="QPushButton" name="pre128">
+       <property name="text">
+        <string>pre128</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="last128">
+       <property name="text">
+        <string>last128</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="spacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>

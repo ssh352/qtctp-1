@@ -21,6 +21,7 @@ public:
     void shutdown();
     void put(void* mdItem);
     RingBuffer* getRingBuffer(QString id);
+    leveldb::DB* getLevelDB(QString id);
     void initRb(QStringList ids);
     void freeRb();
 
@@ -49,6 +50,7 @@ public:
     ~LevelDBBackend();
     void init();
     void shutdown();
+    leveldb::DB* getLevelDB(QString id);
 
 signals:
 
@@ -60,7 +62,6 @@ public slots:
 private:
     void fillRb(QStringList ids);
     void diagnose(QString foo);
-    leveldb::DB* getLevelDB(QString id);
     void loadRbFromBackend(QStringList ids);
 
 private:

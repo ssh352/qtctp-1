@@ -1,9 +1,8 @@
 todo
 ======
-自动累加计算m1/m5，并加入ringbuffer。
-自动写盘，bar每1/5分严格写一个bar（即使没有数据也写一个bar），
-tick是接收多少写多少。
-开始订阅数据之前，自动从数据库加载最近的256项数据到ringbuffer。
+自动累加计算m1/m5，并加入ringbuffer/db。
+加入ordermgr，委托和撤单。
+加入scriptmgr，写策略。
 
 类
 ======
@@ -16,8 +15,11 @@ ctp状态机和spi实现，接收回调。
 CtpCmdMgr CtpCmd:
 ctp命令队列，间隔100毫秒取命令执行，如果被流控下一次继续执行。
 
-DataPump：
+DataPump LevelDBBackend：
 数据接收器，为tick提供长度为256的ringbuffer的缓冲。
+分合约自动保存到硬盘。
+开始订阅数据之前，自动从数据库加载最近的256项数据到ringbuffer。
+
 信号：tick
 
 Profile Logger ServiceMgr:
