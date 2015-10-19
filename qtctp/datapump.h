@@ -33,6 +33,7 @@ private:
     void* saveRb(void* mdItem, int& indexRb, RingBuffer*& rb);
     void fixTickMs(void* mdItem, int indexRb, RingBuffer* rb);
     void loadRbFromBackend(QStringList ids);
+    void test();
 
 private:
     QMap<QString, RingBuffer*> rbs_;

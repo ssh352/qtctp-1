@@ -8,6 +8,7 @@
 #include "ctpmgr.h"
 #include <QDir>
 #include <leveldb/db.h>
+#include "utils.h"
 
 DataPump::DataPump(QObject* parent)
     : QObject(parent)
@@ -25,6 +26,69 @@ void DataPump::init()
     QObject::connect(this, &DataPump::gotMdItem, db_backend_, &LevelDBBackend::onGotMdItem);
 
     db_thread_->start();
+}
+
+void DataPump::test()
+{
+    QDir dir = QDir(QDir::home().absoluteFilePath("qtctp/data"));
+    dir.setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
+    QStringList ids = dir.entryList();
+    for (auto id : ids) {
+        QString path = QDir::home().absoluteFilePath("qtctp/data/") + id + "/tick";
+        mkDir(path);
+        leveldb::Options options;
+        options.create_if_missing = true;
+        options.error_if_exists = false;
+        options.compression = leveldb::kNoCompression;
+        options.paranoid_checks = false;
+        leveldb::DB* db;
+        leveldb::Status status = leveldb::DB::Open(options,
+            path.toStdString(),
+            &db);
+        if (status.ok()) {
+
+            if (0) {
+                DepthMarketDataField* mdItem = new (DepthMarketDataField);
+                memset(mdItem, 0, sizeof(DepthMarketDataField));
+                QString key;
+                leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
+                leveldb::WriteOptions options;
+                key = id + "-tick=";
+                db->Put(options, key.toStdString(), val);
+                delete mdItem;
+            }
+
+            {
+                leveldb::ReadOptions options;
+                leveldb::Iterator* it = db->NewIterator(options);
+                if (!it) {
+                    return;
+                }
+                QString startKey = id + "-tick=";
+                it->Seek(leveldb::Slice(startKey.toStdString()));
+                int count = 0;
+                RingBuffer* rb = new RingBuffer;
+                rb->init(sizeof(DepthMarketDataField), 256);
+                if (it->Valid()) {
+                    it->Prev();
+                }
+                for (; it->Valid() && count < rb->count(); it->Prev()) {
+                    count++;
+                    QString key = QString::fromStdString(it->key().ToString());
+                    qDebug() << key;
+                    if (it->value().size() != sizeof(DepthMarketDataField)) {
+                        qFatal("it->value().size() != sizeof(DepthMarketDataField)");
+                    }
+                    auto mdf = (DepthMarketDataField*)it->value().data();
+                    rb->load(rb->count() - count, mdf);
+                }
+                delete rb;
+                delete it;
+            }
+
+            delete db;
+        }
+    }
 }
 
 //guithread的eventloop退了，不会处理dbthread的finish，这里应该等待线程退出，然后清理qthread对象
@@ -126,7 +190,13 @@ void DataPump::loadRbFromBackend(QStringList ids)
         if (!it) {
             return;
         }
-        it->SeekToLast();
+        //第一个是ID-tick-
+        //最后一个是ID-tick=
+        QString startKey = id + "-tick=";
+        it->Seek(leveldb::Slice(startKey.toStdString()));
+        if (it->Valid()) {
+            it->Prev();
+        }
         int count = 0;
         for (; it->Valid() && count < rb->count(); it->Prev()) {
             count++;
@@ -181,7 +251,7 @@ void LevelDBBackend::onGotMdItem(void* mdItem, int indexRb, void* rb)
     if (db == nullptr) {
         qFatal("db == nullptr");
     }
-    QString key = QString().sprintf("%s-%s-%s-%d", mdf->InstrumentID, mdf->ActionDay, mdf->UpdateTime, mdf->UpdateMillisec);
+    QString key = QString().sprintf("%s-tick-%s-%s-%d", mdf->InstrumentID, mdf->ActionDay, mdf->UpdateTime, mdf->UpdateMillisec);
     leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
     leveldb::WriteOptions options;
     db->Put(options, key.toStdString(), val);
@@ -196,6 +266,7 @@ void LevelDBBackend::initDb(QStringList ids)
     for (int i = 0; i < ids.count(); i++) {
         QString id = ids.at(i);
         QString path = QDir::home().absoluteFilePath("qtctp/data/") + id + "/tick";
+        mkDir(path);
         leveldb::Options options;
         options.create_if_missing = true;
         options.error_if_exists = false;
@@ -206,6 +277,17 @@ void LevelDBBackend::initDb(QStringList ids)
             path.toStdString(),
             &db);
         if (status.ok()) {
+            // hack!!!
+            if (1) {
+                DepthMarketDataField* mdItem = new (DepthMarketDataField);
+                memset(mdItem, 0, sizeof(DepthMarketDataField));
+                QString key;
+                leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
+                leveldb::WriteOptions options;
+                key = id + "-tick=";
+                db->Put(options, key.toStdString(), val);
+                delete mdItem;
+            }
             dbs_.insert(id, db);
         }
     }
