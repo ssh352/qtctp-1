@@ -152,7 +152,7 @@ void MdSm::start()
     dir.mkpath(flowPathMd_);
     mdapi_ = MdApi::CreateMdApi(flowPathMd_.toStdString().c_str());
     g_sm->ctpCmdMgr()->setMdApi(mdapi_);
-    QObject::connect(this, &MdSm::runCmd, g_sm->ctpCmdMgr(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    QObject::connect(this, &MdSm::runCmd, g_sm->ctpCmdMgr(), &CtpCmdMgr::onRunCmd);
     mdspi_ = new MdSmSpi(this);
     mdapi_->RegisterSpi(mdspi_);
     mdapi_->RegisterFront((char*)qPrintable(frontMd_));
@@ -164,7 +164,6 @@ void MdSm::start()
     mdapi_ = nullptr;
     delete mdspi_;
     mdspi_ = nullptr;
-    //freeRb();
 }
 
 void MdSm::stop()
@@ -182,7 +181,6 @@ void MdSm::stop()
 
 void MdSm::subscrible(QStringList ids)
 {
-    //initRb(ids);
     info("MdSm::subscrible");
     emit this->runCmd(new CmdMdSubscrible(ids));
 }

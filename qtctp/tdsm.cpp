@@ -166,7 +166,7 @@ void TdSm::start()
     dir.mkpath(flowPathTd_);
     tdapi_ = TraderApi::CreateTraderApi(flowPathTd_.toStdString().c_str());
     g_sm->ctpCmdMgr()->setTdApi(tdapi_);
-    QObject::connect(this, &TdSm::runCmd, g_sm->ctpCmdMgr(), &CtpCmdMgr::onRunCmd, Qt::QueuedConnection);
+    QObject::connect(this, &TdSm::runCmd, g_sm->ctpCmdMgr(), &CtpCmdMgr::onRunCmd);
     tdspi_ = new TdSmSpi(this);
     tdapi_->RegisterSpi(tdspi_);
     tdapi_->RegisterFront((char*)qPrintable(frontTd_));

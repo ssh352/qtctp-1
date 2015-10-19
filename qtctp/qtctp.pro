@@ -20,6 +20,8 @@ win32-msvc*:QMAKE_CFLAGS_RELEASE += -Zi
 win32-msvc*:QMAKE_CXXFLAGS_RELEASE += -Zi
 win32-msvc*:QMAKE_LFLAGS_RELEASE += /DEBUG /OPT:REF
 
+win32:LIBS += user32.lib
+
 INCLUDEPATH += \
     $$PWD
 
@@ -37,7 +39,8 @@ SOURCES += main.cpp\
     tdsm.cpp \
     ctpcmdmgr.cpp \
     ctpmgr.cpp \
-    datapump.cpp
+    datapump.cpp \
+    crashhandler.cpp
 
 HEADERS  += ui/mainwindow.h \
     ui/configdialog.h \
@@ -52,7 +55,8 @@ HEADERS  += ui/mainwindow.h \
     tdsm.h \
     ctpcmdmgr.h \
     ctpmgr.h \
-    datapump.h
+    datapump.h \
+    crashhandler.h
 
 FORMS    += ui/mainwindow.ui \
     ui/configdialog.ui \
@@ -61,8 +65,7 @@ FORMS    += ui/mainwindow.ui \
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)
-include(../profile.pri)
-include(../crashhandler.pri)
+include(../breakpad.pri)
 
 RESOURCES += \
     systray.qrc

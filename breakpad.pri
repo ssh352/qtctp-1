@@ -1,17 +1,7 @@
 #  Apache 2.0 License
 #  copyright 2015 Speedovation, Yash Pal, yash@speedovation.com
 
-
-INCLUDEPATH += $$PWD $$PWD/breakpad $$PWD/breakpad/src $$PWD/CrashHandler
-
- HEADERS +=  \
-    $$PWD/CrashHandler/CrashHandler.h
-   
-
-SOURCES += \
-    $$PWD/CrashHandler/CrashHandler.cpp
-    
-win32:LIBS += user32.lib
+INCLUDEPATH += $$PWD $$PWD/breakpad $$PWD/breakpad/src
 
 # Windows
 win32{

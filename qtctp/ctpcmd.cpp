@@ -54,6 +54,7 @@ void CmdTdLogin::run()
     strncpy(req.BrokerID, brokerId_.toStdString().c_str(), sizeof(req.BrokerID) - 1);
     strncpy(req.UserID, userId_.toStdString().c_str(), sizeof(req.UserID) - 1);
     strncpy(req.Password, password_.toStdString().c_str(), sizeof(req.Password) - 1);
+    //todo(sunwangme):tdapi可能退了=
     result_ = tdapi()->ReqUserLogin(&req, reqId_);
     info(QString().sprintf("CmdTdLogin,reqId=%d", reqId_));
 }

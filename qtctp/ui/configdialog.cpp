@@ -18,20 +18,19 @@ ConfigDialog::~ConfigDialog()
 
 void ConfigDialog::Save(){
     Profile* profile = g_sm->profile();
-    profile->batchBegin();
-    profile->putBatch("userId",ui->userId->text());
-    profile->putBatch("brokerId",ui->brokerId->text());
-    profile->putBatch("frontMd",ui->frontMd->text());
-    profile->putBatch("frontTd",ui->frontTd->text());
-    profile->putBatch("idPrefixList",ui->idPrefixList->text());
-    profile->batchCommit();
+    profile->put("userId",ui->userId->text());
+    profile->put("brokerId",ui->brokerId->text());
+    profile->put("frontMd",ui->frontMd->text());
+    profile->put("frontTd",ui->frontTd->text());
+    profile->put("idPrefixList",ui->idPrefixList->text());
+    profile->commit();
 }
 
 void ConfigDialog::Load(){
     Profile* profile = g_sm->profile();
-    ui->userId->setText(profile->get("userId",""));
-    ui->brokerId->setText(profile->get("brokerId",""));
-    ui->frontMd->setText(profile->get("frontMd",""));
-    ui->frontTd->setText(profile->get("frontTd",""));
-    ui->idPrefixList->setText(profile->get("idPrefixList","if;ih;ic;sr"));
+    ui->userId->setText(profile->get("userId","").toString());
+    ui->brokerId->setText(profile->get("brokerId","").toString());
+    ui->frontMd->setText(profile->get("frontMd","").toString());
+    ui->frontTd->setText(profile->get("frontTd","").toString());
+    ui->idPrefixList->setText(profile->get("idPrefixList","if;ih;ic;sr").toString());
 }

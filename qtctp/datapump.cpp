@@ -1,6 +1,13 @@
 #include "datapump.h"
 #include "ringbuffer.h"
 #include "ApiStruct.h"
+#include "servicemgr.h"
+#include "logger.h"
+#include <windows.h>
+#include <QLoggingCategory>
+#include "ctpmgr.h"
+#include <QDir>
+#include <leveldb/db.h>
 
 DataPump::DataPump(QObject* parent)
     : QObject(parent)
@@ -9,10 +16,25 @@ DataPump::DataPump(QObject* parent)
 
 void DataPump::init()
 {
+    db_backend_ = new LevelDBBackend;
+    db_thread_ = new QThread;
+    db_backend_->moveToThread(db_thread_);
+
+    QObject::connect(db_thread_, &QThread::started, db_backend_, &LevelDBBackend::init);
+    QObject::connect(db_thread_, &QThread::finished, db_backend_, &LevelDBBackend::shutdown);
+    QObject::connect(this, &DataPump::gotMdItem, db_backend_, &LevelDBBackend::onGotMdItem);
+
+    db_thread_->start();
 }
 
+//guithread的eventloop退了，不会处理dbthread的finish，这里应该等待线程退出，然后清理qthread对象
+//对象属于哪个线程就在哪个线程上清理=
 void DataPump::shutdown()
 {
+    db_thread_->quit();
+    db_thread_->wait();
+    delete db_thread_;
+    db_thread_ = nullptr;
 }
 
 //在spi线程上直接调用=
@@ -26,7 +48,7 @@ void DataPump::put(void* mdItem)
     emit this->gotMdItem(item, indexRb, rb);
 }
 
-//在ctpmgr线程上
+//在ctpmgr线程上一次性完成ringbuffer的初始化操作=
 void DataPump::initRb(QStringList ids)
 {
     if (rbs_.count()) {
@@ -39,11 +61,16 @@ void DataPump::initRb(QStringList ids)
         rb->init(sizeof(DepthMarketDataField), ringBufferLen_);
         rbs_.insert(id, rb);
     }
+
+    db_backend_->initDb(ids);
+    loadRbFromBackend(ids);
 }
 
-//在ctpmgr线程上
+//在ctpmgr线程上一次性完成ringbuffer的析构操作=
 void DataPump::freeRb()
 {
+    db_backend_->freeDb();
+
     auto rb_list = rbs_.values();
     for (int i = 0; i < rb_list.length(); i++) {
         RingBuffer* rb = rb_list.at(i);
@@ -72,7 +99,7 @@ RingBuffer* DataPump::getRingBuffer(QString id)
 
 // 和前一个tick比较，如果time相同，就改ms为前一个的ms+1，不同，ms改为0
 void DataPump::fixTickMs(void* mdItem, int indexRb, RingBuffer* rb)
-{  
+{
     DepthMarketDataField* preItem = nullptr;
     DepthMarketDataField* curItem = (DepthMarketDataField*)mdItem;
     int index = indexRb - 1;
@@ -80,9 +107,121 @@ void DataPump::fixTickMs(void* mdItem, int indexRb, RingBuffer* rb)
         index = index + rb->count();
     }
     preItem = (DepthMarketDataField*)rb->get(index);
-    if (preItem && strcmp(curItem->UpdateTime,preItem->UpdateTime)== 0) {
+    if (preItem && strcmp(curItem->UpdateTime, preItem->UpdateTime) == 0) {
         curItem->UpdateMillisec = preItem->UpdateMillisec + 1;
-    }else{
+    }
+    else {
         curItem->UpdateMillisec = 0;
     }
+}
+
+void DataPump::loadRbFromBackend(QStringList ids)
+{
+    for (auto id : ids) {
+        auto rb = getRingBuffer(id);
+        auto db = db_backend_->getLevelDB(id);
+
+        leveldb::ReadOptions options;
+        leveldb::Iterator* it = db->NewIterator(options);
+        if (!it) {
+            return;
+        }
+        it->SeekToLast();
+        int count = 0;
+        for (; it->Valid() && count < rb->count(); it->Prev()) {
+            count++;
+            if (it->value().size() != sizeof(DepthMarketDataField)) {
+                qFatal("it->value().size() != sizeof(DepthMarketDataField)");
+            }
+            auto mdf = (DepthMarketDataField*)it->value().data();
+            rb->load(rb->count() - count, mdf);
+        }
+        delete it;
+    }
+}
+
+//////
+LevelDBBackend::LevelDBBackend(QObject* parent)
+    : QObject(parent)
+{
+    diagnose(__FUNCTION__);
+}
+
+LevelDBBackend::~LevelDBBackend()
+{
+    diagnose(__FUNCTION__);
+}
+
+void LevelDBBackend::diagnose(QString foo)
+{
+    QString msg = foo + ": " + QString::number(GetCurrentThreadId());
+    g_sm->logger()->info(msg);
+    qDebug() << msg;
+}
+
+void LevelDBBackend::init()
+{
+    diagnose(__FUNCTION__);
+}
+
+void LevelDBBackend::shutdown()
+{
+    diagnose(__FUNCTION__);
+
+    freeDb();
+
+    delete this;
+}
+
+void LevelDBBackend::onGotMdItem(void* mdItem, int indexRb, void* rb)
+{
+    auto mdf = (DepthMarketDataField*)mdItem;
+    QString id = mdf->InstrumentID;
+    auto db = dbs_.value(id);
+    if (db == nullptr) {
+        qFatal("db == nullptr");
+    }
+    QString key = QString().sprintf("%s-%s-%s-%d", mdf->InstrumentID, mdf->ActionDay, mdf->UpdateTime, mdf->UpdateMillisec);
+    leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
+    leveldb::WriteOptions options;
+    db->Put(options, key.toStdString(), val);
+}
+
+void LevelDBBackend::initDb(QStringList ids)
+{
+    if (dbs_.count()) {
+        freeDb();
+    }
+
+    for (int i = 0; i < ids.count(); i++) {
+        QString id = ids.at(i);
+        QString path = QDir::home().absoluteFilePath("qtctp/data/") + id + "/tick";
+        leveldb::Options options;
+        options.create_if_missing = true;
+        options.error_if_exists = false;
+        options.compression = leveldb::kNoCompression;
+        options.paranoid_checks = false;
+        leveldb::DB* db;
+        leveldb::Status status = leveldb::DB::Open(options,
+            path.toStdString(),
+            &db);
+        if (status.ok()) {
+            dbs_.insert(id, db);
+        }
+    }
+}
+
+void LevelDBBackend::freeDb()
+{
+    auto db_list = dbs_.values();
+    for (int i = 0; i < db_list.length(); i++) {
+        auto db = db_list.at(i);
+        delete db;
+    }
+    dbs_.clear();
+}
+
+leveldb::DB* LevelDBBackend::getLevelDB(QString id)
+{
+    return dbs_.value(id);
 }

@@ -14,6 +14,8 @@ ServiceMgr::ServiceMgr(QObject* parent)
 }
 
 //注意init的顺序，后面init的可以访问之前的=
+//注意在init只能调用其他service的object相关的method
+//注意目前servicemgr只管理在uithread上的服务，服务可以内建线程=
 void ServiceMgr::init()
 {
     // 调用init前，所有的访问都fatal=
@@ -24,18 +26,15 @@ void ServiceMgr::init()
     init_ = true;
 
     logger_ = new Logger;
-    logger_->init();
-
     profile_ = new Profile;
-    profile_->init();
-
     ctpCmdMgr_ = new CtpCmdMgr;
-    ctpCmdMgr_->init();
-
     ctpMgr_ = new CtpMgr;
-    ctpMgr_->init();
-
     dataPump_ = new DataPump;
+
+    logger_->init();
+    profile_->init();
+    ctpCmdMgr_->init();
+    ctpMgr_->init();
     dataPump_->init();
 }
 
@@ -49,22 +48,23 @@ void ServiceMgr::shutdown()
     }
 
     dataPump_->shutdown();
+    ctpMgr_->shutdown();
+    ctpCmdMgr_->shutdown();
+    profile_->shutdown();
+    logger_->shutdown();
+
     delete dataPump_;
     dataPump_ = nullptr;
 
-    ctpMgr_->shutdown();
     delete ctpMgr_;
     ctpMgr_ = nullptr;
 
-    ctpCmdMgr_->shutdown();
     delete ctpCmdMgr_;
     ctpCmdMgr_ = nullptr;
 
-    profile_->shutdown();
     delete profile_;
     profile_ = nullptr;
 
-    logger_->shutdown();
     delete logger_;
     logger_ = nullptr;
 

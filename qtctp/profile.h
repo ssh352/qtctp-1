@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVariant>
+#include <QMap>
 
 class QLevelDB;
 class QLevelDBBatch;
@@ -15,16 +16,9 @@ public:
     void shutdown();
 
 public:
-    QString get(QString k, QString defaultValue = QString());
-    void put(QString k, QString v);
-
-    QVariant getv(QString k, QVariant defaultValue = QVariant());
-    void putv(QString k, QVariant v);
-
-    void batchBegin();
-    void putvBatch(QString k,QVariant v);
-    void putBatch(QString k,QString v);
-    bool batchCommit();
+    QVariant get(QString k, QVariant defaultValue = QVariant());
+    void put(QString k, QVariant v);
+    void commit();
 
     QString flowPathMd();
     QString flowPathTd();
@@ -35,8 +29,9 @@ signals:
 public slots:
 
 private:
-    QLevelDB* db_ = nullptr;
-    QLevelDBBatch* batch_ = nullptr;
+    QVariantMap store_;
+    QString path_;
+    bool dirty_ = false;
 };
 
 #endif // PROFILE_H

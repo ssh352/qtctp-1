@@ -1,8 +1,10 @@
 #include "profile.h"
-#include "qleveldb.h"
-#include "qleveldbbatch.h"
-
 #include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QFIle>
+#include "utils.h"
 
 Profile::Profile(QObject* parent)
     : QObject(parent)
@@ -11,53 +13,61 @@ Profile::Profile(QObject* parent)
 
 void Profile::init()
 {
-    db_ = new QLevelDB;
-    QObject::connect(db_,&QLevelDB::keyValueChanged,this,&Profile::keyValueChanged,Qt::QueuedConnection);
-    db_->setFilename(QDir::home().absoluteFilePath("mdcfg.db"));
-    db_->open();
+    path_ = QDir::home().absoluteFilePath("qtctp/config.json");
+    mkDir(path_);
+
+    QFile file(path_);
+    bool res = file.open(QIODevice::ReadOnly);
+    if (!res) {
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    file.close();
+    if (!doc.isObject()) {
+        return;
+    }
+
+    QJsonObject obj = doc.object();
+    store_ = obj.toVariantMap();
 }
 
 void Profile::shutdown()
 {
-    db_->close();
-    delete db_;
-    db_ = nullptr;
+    commit();
 }
 
-QString Profile::get(QString k, QString defaultValue)
+QVariant Profile::get(QString k, QVariant defaultValue)
 {
-    return db_->get(k, defaultValue).toString();
+    return store_.value(k, defaultValue);
 }
 
-void Profile::put(QString k, QString v)
+void Profile::put(QString k, QVariant v)
 {
-    db_->putSync(k, v);
+    QVariant old = get(k);
+    store_.insert(k, v);
+    if (old != v) {
+        emit keyValueChanged(k, v);
+    }
+    dirty_ = true;
 }
 
-QVariant Profile::getv(QString k, QVariant defaultValue)
+void Profile::commit()
 {
-    return db_->get(k, defaultValue);
-}
+    if (!dirty_) {
+        return;
+    }
 
-void Profile::putv(QString k, QVariant v)
-{
-    db_->putSync(k, v);
-}
-
-void Profile::batchBegin(){
-    batch_ = db_->batch();
-}
-
-void Profile::putvBatch(QString k,QVariant v){
-    batch_->put(k,v);
-}
-
-void Profile::putBatch(QString k,QString v){
-    batch_->put(k,v);
-}
-
-bool Profile::batchCommit(){
-    return batch_->write();
+    QJsonObject obj = QJsonObject::fromVariantMap(store_);
+    QJsonDocument doc = QJsonDocument(obj);
+    QFile file(path_);
+    int res = file.open(QIODevice::WriteOnly);
+    if (!res) {
+        return;
+    }
+    file.write(doc.toJson(QJsonDocument::Compact));
+    file.close();
+    dirty_ = false;
 }
 
 //居然要传一个/结尾=
