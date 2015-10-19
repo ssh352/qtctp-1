@@ -8,6 +8,7 @@
 #include <QVariant>
 #include <QString>
 #include <functional>
+#include <QMutex>
 
 namespace leveldb {
 class DB;
@@ -72,6 +73,7 @@ private:
     bool m_opened;
     Status m_status;
     QString m_lastError;
+    QMutex m_mutex;
 };
 
 #endif // QLEVELDB_H

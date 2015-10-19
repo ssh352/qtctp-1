@@ -70,29 +70,19 @@ RingBuffer* DataPump::getRingBuffer(QString id)
     return rbs_.value(id);
 }
 
-// 最近的6个tick/3s，如果有time和tick相同，就把tick改成最近的一个tick+1
+// 和前一个tick比较，如果time相同，就改ms为前一个的ms+1，不同，ms改为0
 void DataPump::fixTickMs(void* mdItem, int indexRb, RingBuffer* rb)
-{
-    int index = -1;
-    DepthMarketDataField* item = nullptr;
+{  
+    DepthMarketDataField* preItem = nullptr;
     DepthMarketDataField* curItem = (DepthMarketDataField*)mdItem;
-
-    bool found = false;
-    for (int i = 0; i < 6; i++) {
-        index = indexRb - 1;
-        if (index < 0) {
-            index = index + rb->count();
-        }
-        item = (DepthMarketDataField*)rb->get(index);
-        if (item == nullptr) {
-            break;
-        }
-        if (strcmp(curItem->UpdateTime, item->UpdateTime) == 0 && curItem->UpdateMillisec == item->UpdateMillisec) {
-            found = true;
-            break;
-        }
+    int index = indexRb - 1;
+    if (index < 0) {
+        index = index + rb->count();
     }
-    if (found) {
-        curItem->UpdateMillisec = item->UpdateMillisec + 1;
+    preItem = (DepthMarketDataField*)rb->get(index);
+    if (preItem && strcmp(curItem->UpdateTime,preItem->UpdateTime)== 0) {
+        curItem->UpdateMillisec = preItem->UpdateMillisec + 1;
+    }else{
+        curItem->UpdateMillisec = 0;
     }
 }

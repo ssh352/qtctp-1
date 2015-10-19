@@ -29,6 +29,7 @@ private:
     QSharedPointer<leveldb::DB> m_levelDB;
     leveldb::WriteBatch* m_writeBatch;
     QSet<QString> m_operations;
+    QMutex m_mutex;
 };
 
 #endif // QLEVELDBBATCH_H

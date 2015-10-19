@@ -198,6 +198,7 @@ QWeakPointer<leveldb::DB> QLevelDB::dbNativeHandle()
     return m_levelDB.toWeakRef();
 }
 
+// Iterator的非const不是线程安全的，需要加锁=
 bool QLevelDB::readStream(std::function<bool(QString, QVariant)> callback, const QString startKey, const int length)
 {
     if (!opened() || length == 0)
@@ -210,6 +211,7 @@ bool QLevelDB::readStream(std::function<bool(QString, QVariant)> callback, const
     if (!it)
         return false;
 
+    QMutexLocker l(&m_mutex);
     if (!startKey.isEmpty())
         it->Seek(leveldb::Slice(startKey.toStdString()));
     else
