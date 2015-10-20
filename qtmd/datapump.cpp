@@ -253,6 +253,9 @@ void LevelDBBackend::initDb(QStringList ids)
             db_->Put(options, key.toStdString(), val);
         }
         delete mdItem;
+    }else{
+        //可能有多线程问题，加个assert=
+        qFatal("db_ == nullptr");
     }
 #endif
 
