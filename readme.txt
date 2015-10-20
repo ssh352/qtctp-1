@@ -2,7 +2,6 @@ todo
 ======
 自动累加计算m1/m5，并加入ringbuffer/db。
 加入网络订阅服务。
-加入合约详细信息：id+ id- id=
 
 类
 ======
@@ -19,8 +18,12 @@ DataPump LevelDBBackend：
 数据接收器，为tick提供长度为256的ringbuffer的缓冲。
 分合约自动保存到硬盘。
 开始订阅数据之前，自动从数据库加载最近的256项数据到ringbuffer。
-
 信号：tick
+数据格式：
+合约定位：id+ id=
+合约查询：id-xxxx
+tick定位：tick-id+ tick-id=
+tick查询：tick-id-xxxx
 
 Profile Logger ServiceMgr:
 配置 日志/崩溃收集 服务管理。

@@ -6,6 +6,8 @@
 #include "servicemgr.h"
 #include "ctpcmdmgr.h"
 #include "logger.h"
+#include "datapump.h"
+#include <leveldb/db.h>
 
 ///////////
 class TdSmSpi : public TraderSpi {
@@ -78,6 +80,7 @@ private:
                     if (low_id.startsWith(prefix)) {
                         //info(QString().sprintf("got id:%s", low_id.toUtf8().constData()));
                         ids_ << id;
+                        initId(id, pInstrument);
                         break;
                     }
                 }
@@ -118,6 +121,39 @@ private:
     void info(QString msg)
     {
         g_sm->logger()->info(msg);
+    }
+
+    //直接写=
+    void initId(QString id, InstrumentField* pInstrument)
+    {
+        leveldb::DB* db = g_sm->dataPump()->getLevelDB(id);
+        if (db == nullptr) {
+            qFatal("db == nullptr");
+            return;
+        }
+
+        //加入id
+        {
+            InstrumentField* idItem = pInstrument;
+            QString key;
+            leveldb::Slice val((const char*)idItem, sizeof(InstrumentField));
+            leveldb::WriteOptions options;
+            key = QStringLiteral("id-") + id;
+            db->Put(options, key.toStdString(), val);
+        }
+
+        //初始化tick定位=
+        {
+            DepthMarketDataField* mdItem = new (DepthMarketDataField);
+            memset(mdItem, 0, sizeof(DepthMarketDataField));
+            QString key;
+            leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
+            leveldb::WriteOptions options;
+            key = QStringLiteral("tick-") + id + QStringLiteral("+");
+            db->Put(options, key.toStdString(), val);
+            key = QStringLiteral("tick-") + id + QStringLiteral("=");
+            db->Put(options, key.toStdString(), val);
+        }
     }
 
 private:

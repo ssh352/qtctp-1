@@ -48,7 +48,7 @@ void DbForm::on_first128_clicked()
     //第一个是tick-id-
     //最后一个是tick-id=
     QString key;
-    key = QStringLiteral("tick-") + id_ + QStringLiteral("-");
+    key = QStringLiteral("tick-") + id_ + QStringLiteral("+");
 
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
