@@ -143,13 +143,39 @@ void LevelDBBackend::diagnose(QString foo)
 void LevelDBBackend::init()
 {
     diagnose(__FUNCTION__);
+
+#ifdef MULTI_DB
+#else
+    QString path = g_sm->profile()->dbPath() + QStringLiteral("/allinone");
+    mkDir(path);
+    leveldb::Options options;
+    options.create_if_missing = true;
+    options.error_if_exists = false;
+    options.compression = leveldb::kNoCompression;
+    options.paranoid_checks = false;
+    leveldb::DB* db;
+    leveldb::Status status = leveldb::DB::Open(options,
+        path.toStdString(),
+        &db);
+    if (status.ok()) {
+        db_ = db;
+    }else{
+        qFatal("leveldb::DB::Open fail");
+    }
+
+#endif
+
 }
 
 void LevelDBBackend::shutdown()
 {
     diagnose(__FUNCTION__);
 
-    freeDb();
+#ifdef MULTI_DB
+#else
+    delete db_;
+    db_ = nullptr;
+#endif
 
     delete this;
 }
@@ -205,43 +231,28 @@ void LevelDBBackend::initDb(QStringList ids)
                 delete mdItem;
             }
             dbs_.insert(id, db);
+        }else{
+            qFatal("leveldb::DB::Open fail");
         }
     }
 #else
-    if (db_ != nullptr){
-        qFatal("db_ != nullptr");
-    }
-    if(1){
-        QString path = g_sm->profile()->dbPath() + QStringLiteral("/allinone");
-        mkDir(path);
-        leveldb::Options options;
-        options.create_if_missing = true;
-        options.error_if_exists = false;
-        options.compression = leveldb::kNoCompression;
-        options.paranoid_checks = false;
-        leveldb::DB* db;
-        leveldb::Status status = leveldb::DB::Open(options,
-            path.toStdString(),
-            &db);
-        if (status.ok()) {
-            // hack!!!
-            //第一个是tick-id+
-            //最后一个是tick-id=
-            DepthMarketDataField* mdItem = new (DepthMarketDataField);
-            memset(mdItem, 0, sizeof(DepthMarketDataField));
-            for (int i = 0; i < ids.count(); i++) {
-                QString id = ids.at(i);
-                QString key;
-                leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
-                leveldb::WriteOptions options;
-                key = QStringLiteral("tick-") + id + QStringLiteral("-");
-                db->Put(options, key.toStdString(), val);
-                key = QStringLiteral("tick-") + id + QStringLiteral("=");
-                db->Put(options, key.toStdString(), val);
-            }
-            delete mdItem;
+    if(db_){
+        // hack!!!
+        //第一个是tick-id+
+        //最后一个是tick-id=
+        DepthMarketDataField* mdItem = new (DepthMarketDataField);
+        memset(mdItem, 0, sizeof(DepthMarketDataField));
+        for (int i = 0; i < ids.count(); i++) {
+            QString id = ids.at(i);
+            QString key;
+            leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
+            leveldb::WriteOptions options;
+            key = QStringLiteral("tick-") + id + QStringLiteral("-");
+            db_->Put(options, key.toStdString(), val);
+            key = QStringLiteral("tick-") + id + QStringLiteral("=");
+            db_->Put(options, key.toStdString(), val);
         }
-        db_ = db;
+        delete mdItem;
     }
 #endif
 
@@ -258,8 +269,6 @@ void LevelDBBackend::freeDb()
     }
     dbs_.clear();
 #else
-    delete db_;
-    db_ = nullptr;
 #endif
 }
 
