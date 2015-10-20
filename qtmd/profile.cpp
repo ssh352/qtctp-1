@@ -13,7 +13,7 @@ Profile::Profile(QObject* parent)
 
 void Profile::init()
 {
-    path_ = QDir::home().absoluteFilePath("qtctp/config.json");
+    path_ = QDir::home().absoluteFilePath("qtmd/config.json");
     mkDir(path_);
 
     QFile file(path_);
@@ -73,11 +73,15 @@ void Profile::commit()
 //居然要传一个/结尾=
 QString Profile::flowPathMd()
 {
-    return QDir::temp().absoluteFilePath("hdsrv/mdapi/");
+    return QDir::home().absoluteFilePath("qtmd/mdapi/");
 }
 
 //居然要传一个/结尾=
 QString Profile::flowPathTd()
 {
-    return QDir::temp().absoluteFilePath("hdsrv/tdapi/");
+    return QDir::home().absoluteFilePath("qtmd/tdapi/");
+}
+
+QString Profile::dbPath(){
+    return QDir::home().absoluteFilePath("qtmd/data");
 }

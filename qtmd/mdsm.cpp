@@ -64,10 +64,15 @@ private:
         if (!isErrorRsp(pRspInfo, nRequestID) && pSpecificInstrument) {
             QString iid = pSpecificInstrument->InstrumentID;
             got_ids_ << iid;
-            info(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
+            //info(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
         }
 
         if (bIsLast && got_ids_.length()) {
+            QString ids;
+            for (auto id : got_ids_) {
+                ids = ids + id + ";";
+            }
+            info(QString().sprintf("total sub ids:%d,%s", got_ids_.length(), ids.toUtf8().constData()));
             emit sm()->statusChanged(MDSM_RECVING);
         }
     }

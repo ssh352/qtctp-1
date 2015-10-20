@@ -13,6 +13,8 @@ namespace leveldb {
 class DB;
 }
 
+//#define MULTI_DB
+
 class DataPump : public QObject {
     Q_OBJECT
 public:
@@ -65,7 +67,11 @@ private:
     void loadRbFromBackend(QStringList ids);
 
 private:
+#ifdef MULTI_DB
     QMap<QString,leveldb::DB*> dbs_;
+#else
+    leveldb::DB* db_ = nullptr;
+#endif
 };
 
 #endif // DATAPUMP_H

@@ -76,7 +76,7 @@ private:
                 for (int i = 0; i < idPrefixList_.length(); i++) {
                     prefix = idPrefixList_.at(i);
                     if (low_id.startsWith(prefix)) {
-                        info(QString().sprintf("got id:%s", low_id.toUtf8().constData()));
+                        //info(QString().sprintf("got id:%s", low_id.toUtf8().constData()));
                         ids_ << id;
                         break;
                     }
@@ -84,11 +84,13 @@ private:
             }
         }
 
-        if (bIsLast) {
-            info(QString().sprintf("total got ids:%d", ids_.length()));
-            if (ids_.length()) {
-                emit sm()->gotIds(ids_);
+        if (bIsLast && ids_.length()) {
+            QString ids;
+            for (auto id : ids_) {
+                ids = ids + id + ";";
             }
+            info(QString().sprintf("total got ids:%d,%s", ids_.length(), ids.toUtf8().constData()));
+            emit sm()->gotIds(ids_);
         }
     }
 

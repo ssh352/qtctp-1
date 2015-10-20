@@ -9,6 +9,7 @@
 #include <QDir>
 #include <leveldb/db.h>
 #include "utils.h"
+#include "profile.h"
 
 DataPump::DataPump(QObject* parent)
     : QObject(parent)
@@ -157,11 +158,11 @@ void LevelDBBackend::put(void* mdItem, int indexRb, void* rb)
 {
     auto mdf = (DepthMarketDataField*)mdItem;
     QString id = mdf->InstrumentID;
-    auto db = dbs_.value(id);
+    auto db = this->getLevelDB(id);
     if (db == nullptr) {
         qFatal("db == nullptr");
     }
-    QString key = QString().sprintf("%s-tick-%s-%s-%d", mdf->InstrumentID, mdf->ActionDay, mdf->UpdateTime, mdf->UpdateMillisec);
+    QString key = QString().sprintf("tick-%s-%s-%s-%d", mdf->InstrumentID, mdf->ActionDay, mdf->UpdateTime, mdf->UpdateMillisec);
     leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
     leveldb::WriteOptions options;
     db->Put(options, key.toStdString(), val);
@@ -169,13 +170,14 @@ void LevelDBBackend::put(void* mdItem, int indexRb, void* rb)
 
 void LevelDBBackend::initDb(QStringList ids)
 {
+#ifdef MULTI_DB
     if (dbs_.count()!=0) {
         qFatal("dbs_.count()!=0");
     }
 
     for (int i = 0; i < ids.count(); i++) {
         QString id = ids.at(i);
-        QString path = QDir::home().absoluteFilePath("qtctp/data/") + id + "/tick";
+        QString path = g_sm->profile()->dbPath() + QStringLiteral("/") + id + QStringLiteral("/tick");
         mkDir(path);
         leveldb::Options options;
         options.create_if_missing = true;
@@ -188,40 +190,86 @@ void LevelDBBackend::initDb(QStringList ids)
             &db);
         if (status.ok()) {
             // hack!!!
-            //第一个是ID-tick+
-            //最后一个是ID-tick=
+            //第一个是tick-id+
+            //最后一个是tick-id=
             if (1) {
                 DepthMarketDataField* mdItem = new (DepthMarketDataField);
                 memset(mdItem, 0, sizeof(DepthMarketDataField));
                 QString key;
                 leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
                 leveldb::WriteOptions options;
-                key = id + "-tick+";
+                key = QStringLiteral("tick-") + id + QStringLiteral("-");
                 db->Put(options, key.toStdString(), val);
-                key = id + "-tick=";
+                key = QStringLiteral("tick-") + id + QStringLiteral("=");
                 db->Put(options, key.toStdString(), val);
                 delete mdItem;
             }
             dbs_.insert(id, db);
         }
     }
+#else
+    if (db_ != nullptr){
+        qFatal("db_ != nullptr");
+    }
+    if(1){
+        QString path = g_sm->profile()->dbPath() + QStringLiteral("/allinone");
+        mkDir(path);
+        leveldb::Options options;
+        options.create_if_missing = true;
+        options.error_if_exists = false;
+        options.compression = leveldb::kNoCompression;
+        options.paranoid_checks = false;
+        leveldb::DB* db;
+        leveldb::Status status = leveldb::DB::Open(options,
+            path.toStdString(),
+            &db);
+        if (status.ok()) {
+            // hack!!!
+            //第一个是tick-id+
+            //最后一个是tick-id=
+            DepthMarketDataField* mdItem = new (DepthMarketDataField);
+            memset(mdItem, 0, sizeof(DepthMarketDataField));
+            for (int i = 0; i < ids.count(); i++) {
+                QString id = ids.at(i);
+                QString key;
+                leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
+                leveldb::WriteOptions options;
+                key = QStringLiteral("tick-") + id + QStringLiteral("-");
+                db->Put(options, key.toStdString(), val);
+                key = QStringLiteral("tick-") + id + QStringLiteral("=");
+                db->Put(options, key.toStdString(), val);
+            }
+            delete mdItem;
+        }
+        db_ = db;
+    }
+#endif
 
     loadRbFromBackend(ids);
 }
 
 void LevelDBBackend::freeDb()
 {
+#ifdef MULTI_DB
     auto db_list = dbs_.values();
     for (int i = 0; i < db_list.length(); i++) {
         auto db = db_list.at(i);
         delete db;
     }
     dbs_.clear();
+#else
+    delete db_;
+    db_ = nullptr;
+#endif
 }
 
 leveldb::DB* LevelDBBackend::getLevelDB(QString id)
 {
+#ifdef MULTI_DB
     return dbs_.value(id);
+#else
+    return db_;
+#endif
 }
 
 void LevelDBBackend::loadRbFromBackend(QStringList ids)
@@ -235,10 +283,11 @@ void LevelDBBackend::loadRbFromBackend(QStringList ids)
         if (!it) {
             return;
         }
-        //第一个是ID-tick+
-        //最后一个是ID-tick=
-        QString startKey = id + "-tick=";
-        it->Seek(leveldb::Slice(startKey.toStdString()));
+        //第一个是tick-id-
+        //最后一个是tick-id=
+        QString key;
+        key = QStringLiteral("tick-") + id + QStringLiteral("=");
+        it->Seek(leveldb::Slice(key.toStdString()));
         if (it->Valid()) {
             it->Prev();
         }

@@ -1,8 +1,8 @@
 todo
 ======
 自动累加计算m1/m5，并加入ringbuffer/db。
-加入ordermgr，委托和撤单。
-加入scriptmgr，写策略。
+加入网络订阅服务。
+加入合约详细信息：id+ id- id=
 
 类
 ======

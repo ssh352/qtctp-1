@@ -45,14 +45,15 @@ void DbForm::on_first128_clicked()
         return;
     }
 
-    //第一个是ID-tick+
-    //最后一个是ID-tick=
-    QString startKey = id_ + "-tick+";
+    //第一个是tick-id-
+    //最后一个是tick-id=
+    QString key;
+    key = QStringLiteral("tick-") + id_ + QStringLiteral("-");
 
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    it->Seek(leveldb::Slice(startKey.toStdString()));
+    it->Seek(leveldb::Slice(key.toStdString()));
     if (it->Valid()) {
         it->Next();
     }
@@ -89,18 +90,19 @@ void DbForm::on_next128_clicked()
         return;
     }
 
-    //第一个是ID-tick+
-    //最后一个是ID-tick=
+    //第一个是tick-id-
+    //最后一个是tick-id=
     int r = ui->tableWidget->rowCount() - 1;
     QString d = ui->tableWidget->item(r, 1)->text();
     QString t = ui->tableWidget->item(r, 2)->text();
     QString m = ui->tableWidget->item(r, 3)->text();
-    QString startKey = id_ + "-tick-" + d + "-" + t + "-" + m;
+    QString sep = QStringLiteral("-");
+    QString key = QStringLiteral("tick-") + id_ + sep + d + sep + t + sep + m;
 
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    it->Seek(leveldb::Slice(startKey.toStdString()));
+    it->Seek(leveldb::Slice(key.toStdString()));
     if (it->Valid()) {
         it->Next();
     }
@@ -137,18 +139,19 @@ void DbForm::on_pre128_clicked()
         return;
     }
 
-    //第一个是ID-tick+
-    //最后一个是ID-tick=
+    //第一个是tick-id-
+    //最后一个是tick-id=
     int r = ui->tableWidget->rowCount() - 1;
     QString d = ui->tableWidget->item(r, 1)->text();
     QString t = ui->tableWidget->item(r, 2)->text();
     QString m = ui->tableWidget->item(r, 3)->text();
-    QString startKey = id_ + "-tick-" + d + "-" + t + "-" + m;
+    QString sep = QStringLiteral("-");
+    QString key = QStringLiteral("tick-") + id_ + sep + d + sep + t + sep + m;
 
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    it->Seek(leveldb::Slice(startKey.toStdString()));
+    it->Seek(leveldb::Slice(key.toStdString()));
     if (it->Valid()) {
         it->Prev();
     }
@@ -183,12 +186,12 @@ void DbForm::on_last128_clicked()
 
     //第一个是ID-tick+
     //最后一个是ID-tick=
-    QString startKey = id_ + "-tick=";
+    QString key = QStringLiteral("tick-") + id_ + QStringLiteral("=");
 
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    it->Seek(leveldb::Slice(startKey.toStdString()));
+    it->Seek(leveldb::Slice(key.toStdString()));
     if (it->Valid()) {
         it->Prev();
     }
