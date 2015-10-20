@@ -30,11 +30,13 @@ void DbForm::Init(QString id)
 {
     id_ = id;
     this->setWindowTitle(QString("details-" + id));
+
+    on_last128_clicked();
 }
 
 void DbForm::on_first128_clicked()
 {
-    leveldb::DB* db = g_sm->dataPump()->getLevelDB(id_);
+    leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     if (!db) {
         return;
     }
@@ -45,7 +47,7 @@ void DbForm::on_first128_clicked()
         return;
     }
 
-    //第一个是tick-id-
+    //第一个是tick-id+
     //最后一个是tick-id=
     QString key;
     key = QStringLiteral("tick-") + id_ + QStringLiteral("+");
@@ -65,7 +67,7 @@ void DbForm::on_first128_clicked()
         }
         auto mdf = (DepthMarketDataField*)it->value().data();
         //遇到了前后两个结束item
-        if (mdf->ActionDay[0] == 0) {
+        if (mdf->InstrumentID[0] == 0) {
             break;
         }
         onGotMdItem(mdf);
@@ -79,7 +81,7 @@ void DbForm::on_next128_clicked()
         return;
     }
 
-    leveldb::DB* db = g_sm->dataPump()->getLevelDB(id_);
+    leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     if (!db) {
         return;
     }
@@ -90,7 +92,7 @@ void DbForm::on_next128_clicked()
         return;
     }
 
-    //第一个是tick-id-
+    //第一个是tick-id+
     //最后一个是tick-id=
     int r = ui->tableWidget->rowCount() - 1;
     QString d = ui->tableWidget->item(r, 1)->text();
@@ -114,7 +116,7 @@ void DbForm::on_next128_clicked()
         }
         auto mdf = (DepthMarketDataField*)it->value().data();
         //遇到了前后两个结束item
-        if (mdf->ActionDay[0] == 0) {
+        if (mdf->InstrumentID[0] == 0) {
             break;
         }
         onGotMdItem(mdf);
@@ -128,7 +130,7 @@ void DbForm::on_pre128_clicked()
         return;
     }
 
-    leveldb::DB* db = g_sm->dataPump()->getLevelDB(id_);
+    leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     if (!db) {
         return;
     }
@@ -139,7 +141,7 @@ void DbForm::on_pre128_clicked()
         return;
     }
 
-    //第一个是tick-id-
+    //第一个是tick-id+
     //最后一个是tick-id=
     int r = ui->tableWidget->rowCount() - 1;
     QString d = ui->tableWidget->item(r, 1)->text();
@@ -163,7 +165,7 @@ void DbForm::on_pre128_clicked()
         }
         auto mdf = (DepthMarketDataField*)it->value().data();
         //遇到了前后两个结束item
-        if (mdf->ActionDay[0] == 0) {
+        if (mdf->InstrumentID[0] == 0) {
             break;
         }
         onGotMdItem(mdf);
@@ -173,7 +175,7 @@ void DbForm::on_pre128_clicked()
 
 void DbForm::on_last128_clicked()
 {
-    leveldb::DB* db = g_sm->dataPump()->getLevelDB(id_);
+    leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     if (!db) {
         return;
     }
@@ -203,7 +205,7 @@ void DbForm::on_last128_clicked()
         }
         auto mdf = (DepthMarketDataField*)it->value().data();
         //遇到了前后两个结束item
-        if (mdf->ActionDay[0] == 0) {
+        if (mdf->InstrumentID[0] == 0) {
             break;
         }
         onGotMdItem(mdf);

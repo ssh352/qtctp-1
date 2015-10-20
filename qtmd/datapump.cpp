@@ -99,8 +99,8 @@ RingBuffer* DataPump::getRingBuffer(QString id)
     return rbs_.value(id);
 }
 
-leveldb::DB* DataPump::getLevelDB(QString id){
-    return db_backend_->getLevelDB(id);
+leveldb::DB* DataPump::getLevelDB(){
+    return db_backend_->getLevelDB();
 }
 
 // 和前一个tick比较，如果time相同，就改ms为前一个的ms+1，不同，ms改为0
@@ -125,25 +125,14 @@ void DataPump::fixTickMs(void* mdItem, int indexRb, RingBuffer* rb)
 LevelDBBackend::LevelDBBackend(QObject* parent)
     : QObject(parent)
 {
-    diagnose(__FUNCTION__);
 }
 
 LevelDBBackend::~LevelDBBackend()
 {
-    diagnose(__FUNCTION__);
-}
-
-void LevelDBBackend::diagnose(QString foo)
-{
-    QString msg = foo + ": " + QString::number(GetCurrentThreadId());
-    g_sm->logger()->info(msg);
-    qDebug() << msg;
 }
 
 void LevelDBBackend::init()
 {
-    diagnose(__FUNCTION__);
-
     QString path = g_sm->profile()->dbPath() + QStringLiteral("/allinone");
     mkDir(path);
     leveldb::Options options;
@@ -178,8 +167,6 @@ void LevelDBBackend::init()
 
 void LevelDBBackend::shutdown()
 {
-    diagnose(__FUNCTION__);
-
     delete db_;
     db_ = nullptr;
 
@@ -190,7 +177,7 @@ void LevelDBBackend::put(void* mdItem, int indexRb, void* rb)
 {
     auto mdf = (DepthMarketDataField*)mdItem;
     QString id = mdf->InstrumentID;
-    auto db = this->getLevelDB(id);
+    auto db = this->getLevelDB();
     if (db == nullptr) {
         qFatal("db == nullptr");
     }
@@ -210,7 +197,7 @@ void LevelDBBackend::freeDb()
 
 }
 
-leveldb::DB* LevelDBBackend::getLevelDB(QString id)
+leveldb::DB* LevelDBBackend::getLevelDB()
 {
     return db_;
 }
@@ -219,7 +206,7 @@ void LevelDBBackend::loadRbFromBackend(QStringList ids)
 {
     for (auto id : ids) {
         auto rb = g_sm->dataPump()->getRingBuffer(id);
-        auto db = getLevelDB(id);
+        auto db = getLevelDB();
 
         leveldb::ReadOptions options;
         leveldb::Iterator* it = db->NewIterator(options);
@@ -242,7 +229,7 @@ void LevelDBBackend::loadRbFromBackend(QStringList ids)
             }
             auto mdf = (DepthMarketDataField*)it->value().data();
             //遇到了前后两个结束item
-            if(mdf->ActionDay[0]==0){
+            if(mdf->InstrumentID[0]==0){
                 break;
             }
             rb->load(rb->count() - count, mdf);

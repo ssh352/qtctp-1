@@ -16,6 +16,7 @@
 #include "logger.h"
 #include "ctpmgr.h"
 #include "datapump.h"
+#include "historyform.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -25,7 +26,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->setupUi(this);
     ui->splitter->setStretchFactor(0, 3);
     ui->splitter->setStretchFactor(1, 1);
-    setWindowTitle("qtctp");
+    setWindowTitle("qtmd");
     icon_ = QIcon(":/images/heart.png");
     setWindowIcon(icon_);
 
@@ -95,7 +96,7 @@ void MainWindow::resetUI(){
 
 void MainWindow::on_actionVersion_triggered()
 {
-    logger()->info(QString("qtctp version: ") + QString(__DATE__) + " " + QString(__TIME__));
+    logger()->info(QString("qtmd version: ") + QString(__DATE__) + " " + QString(__TIME__));
     logger()->info(QString("mdapi version: ") + MdSm::version());
     logger()->info(QString("tdapi version: ") + TdSm::version());
 }
@@ -210,7 +211,7 @@ void MainWindow::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setContextMenu(trayIconMenu);
     trayIcon->setIcon(icon_);
-    trayIcon->setToolTip("mdsrv");
+    trayIcon->setToolTip("qtmd");
 
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
         this, SLOT(onTrayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -283,4 +284,13 @@ void MainWindow::on_actionDerefZeroCrash_triggered()
     int* x = 0;
     *x = 1;
     base::debug::Alias(x);
+}
+
+//显示历史列表=
+void MainWindow::on_actionHistory_triggered()
+{
+    HistoryForm* form = new HistoryForm();
+    form->setWindowFlags(Qt::Window);
+    form->init();
+    form->show();
 }

@@ -21,9 +21,8 @@ private:
     void onGotMdItem(void* item);
 
 private slots:
-    void on_pushButton_clicked();
-
-    void on_details_clicked();
+    void on_historyButton_clicked();
+    void on_refreshButton_clicked();
 
 private:
     Ui::TickForm *ui;

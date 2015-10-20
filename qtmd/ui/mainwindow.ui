@@ -68,11 +68,24 @@
     </property>
     <addaction name="actionVersion"/>
     <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menuData">
+    <property name="title">
+     <string>data</string>
+    </property>
+    <addaction name="actionHistory"/>
+   </widget>
+   <widget class="QMenu" name="menuDebug">
+    <property name="title">
+     <string>debug</string>
+    </property>
     <addaction name="actionInvalidParamCrash"/>
     <addaction name="actionPureCallCrash"/>
     <addaction name="actionDerefZeroCrash"/>
    </widget>
    <addaction name="menuSystem"/>
+   <addaction name="menuData"/>
+   <addaction name="menuDebug"/>
    <addaction name="menuAbout"/>
   </widget>
   <action name="actionConfig">
@@ -119,6 +132,11 @@
   <action name="actionDerefZeroCrash">
    <property name="text">
     <string>DerefZeroCrash</string>
+   </property>
+  </action>
+  <action name="actionHistory">
+   <property name="text">
+    <string>history</string>
    </property>
   </action>
  </widget>

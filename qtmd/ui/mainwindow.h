@@ -40,6 +40,7 @@ private slots:
     void on_actionInvalidParamCrash_triggered();
     void on_actionPureCallCrash_triggered();
     void on_actionDerefZeroCrash_triggered();
+    void on_actionHistory_triggered();
 
 private:
     void closeEvent (QCloseEvent *event) override;

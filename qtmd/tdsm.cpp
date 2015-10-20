@@ -78,7 +78,6 @@ private:
                 for (int i = 0; i < idPrefixList_.length(); i++) {
                     prefix = idPrefixList_.at(i);
                     if (low_id.startsWith(prefix)) {
-                        //info(QString().sprintf("got id:%s", low_id.toUtf8().constData()));
                         ids_ << id;
                         initId(id, pInstrument);
                         break;
@@ -126,7 +125,7 @@ private:
     //直接写=
     void initId(QString id, InstrumentField* pInstrument)
     {
-        leveldb::DB* db = g_sm->dataPump()->getLevelDB(id);
+        leveldb::DB* db = g_sm->dataPump()->getLevelDB();
         if (db == nullptr) {
             qFatal("db == nullptr");
             return;

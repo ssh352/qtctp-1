@@ -102,15 +102,15 @@ void TickForm::onGotMdItem(void* p)
     }
 }
 
-void TickForm::on_pushButton_clicked()
-{
-    scanMd();
-}
-
-void TickForm::on_details_clicked()
+void TickForm::on_historyButton_clicked()
 {
     DbForm* form = new DbForm();
     form->setWindowFlags(Qt::Window);
     form->Init(id_);
     form->show();
+}
+
+void TickForm::on_refreshButton_clicked()
+{
+    scanMd();
 }

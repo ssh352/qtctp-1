@@ -64,7 +64,6 @@ private:
         if (!isErrorRsp(pRspInfo, nRequestID) && pSpecificInstrument) {
             QString iid = pSpecificInstrument->InstrumentID;
             got_ids_ << iid;
-            //info(QString().sprintf("sub:%s ok", iid.toUtf8().constData()));
         }
 
         if (bIsLast && got_ids_.length()) {

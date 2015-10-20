@@ -41,7 +41,8 @@ SOURCES += main.cpp\
     ctpcmdmgr.cpp \
     ctpmgr.cpp \
     datapump.cpp \
-    crashhandler.cpp
+    crashhandler.cpp \
+    ui/historyform.cpp
 
 
 HEADERS  += ui/mainwindow.h \
@@ -59,14 +60,16 @@ HEADERS  += ui/mainwindow.h \
     ctpcmdmgr.h \
     ctpmgr.h \
     datapump.h \
-    crashhandler.h
+    crashhandler.h \
+    ui/historyform.h
 
 
 FORMS    += ui/mainwindow.ui \
     ui/configdialog.ui \
     ui/logindialog.ui \
     ui/tickform.ui \
-    ui/dbform.ui
+    ui/dbform.ui \
+    ui/historyform.ui
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)
