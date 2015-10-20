@@ -258,6 +258,12 @@ void CrashHandlerPrivate::InitCrashHandler(const QString& dumpPath)
         kLargerDumpType,
         (HANDLE)NULL, // pipe_handle
         NULL); // crash_generation_client
+
+#ifndef _DEBUG
+    pHandler->set_consume_invalid_handle_exceptions(true);
+    pHandler->set_handle_debug_exceptions(true);
+#endif
+
 #elif defined(Q_OS_LINUX)
     std::string pathAsStr = dumpPath.toStdString();
     google_breakpad::MinidumpDescriptor md(pathAsStr);

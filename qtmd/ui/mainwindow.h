@@ -41,6 +41,9 @@ private slots:
     void on_actionPureCallCrash_triggered();
     void on_actionDerefZeroCrash_triggered();
     void on_actionHistory_triggered();
+    void on_actionQFatal_triggered();
+    void on_actionDebugbreak_triggered();
+    void on_actionDebugBreak_triggered();
 
 private:
     void closeEvent (QCloseEvent *event) override;

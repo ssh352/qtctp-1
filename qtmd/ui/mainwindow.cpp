@@ -17,6 +17,7 @@
 #include "ctpmgr.h"
 #include "datapump.h"
 #include "historyform.h"
+#include <windows.h>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -293,4 +294,20 @@ void MainWindow::on_actionHistory_triggered()
     form->setWindowFlags(Qt::Window);
     form->init();
     form->show();
+}
+
+void MainWindow::on_actionQFatal_triggered()
+{
+    qFatal("crash for qFatal");
+}
+
+
+void MainWindow::on_actionDebugbreak_triggered()
+{
+    __debugbreak();
+}
+
+void MainWindow::on_actionDebugBreak_triggered()
+{
+    DebugBreak();
 }

@@ -5,6 +5,19 @@
 #include <QCoreApplication>
 #include <crtdbg.h>
 #include <windows.h>
+#include <QtGlobal>
+
+static QtMessageHandler preMessageHandler = nullptr;
+
+static void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+#ifndef _DEBUG
+    if (type == QtFatalMsg){
+        __debugbreak();
+    }
+#endif
+    preMessageHandler(type,context,msg);
+}
 
 Logger::Logger(QObject* parent)
     : QObject(parent)
@@ -29,6 +42,8 @@ void Logger::init()
     }
 
     CrashManager::CrashHandler::instance()->Init(qApp->applicationDirPath(), reporter, params);
+
+    preMessageHandler = qInstallMessageHandler(myMessageHandler);
 }
 
 void Logger::shutdown()
