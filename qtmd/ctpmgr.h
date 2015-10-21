@@ -32,12 +32,19 @@ private slots:
 private:
     Profile* profile();
     Logger* logger();
+    bool initMdSm();
+    void startMdSm();
+    bool initTdSm();
+    void startTdSm();
+    void tryStartSubscrible();
 
 private:
     MdSm* mdsm_ = nullptr;
     QThread* mdsm_thread_ = nullptr;
+    bool mdsm_logined_ = false;
     TdSm* tdsm_ = nullptr;
     QThread* tdsm_thread_ = nullptr;
+    bool tdsm_logined_ = false;
 
     QString password_;
 };

@@ -30,9 +30,10 @@ private:
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
     void OnFrontDisconnected(int nReason) override
     {
-        resetData();
-        info("MdSmSpi::OnFrontDisconnected");
+        info(QString().sprintf("MdSmSpi::OnFrontDisconnected,nReason=%d", nReason));
         emit sm()->statusChanged(MDSM_DISCONNECTED);
+
+        resetData();
     }
 
     void OnHeartBeatWarning(int nTimeLapse) override
@@ -40,6 +41,7 @@ private:
         info("MdSmSpi::OnHeartBeatWarning");
     }
 
+    //errorId=7，msg=CTP:还没有初始化=
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         info("MdSmSpi::OnRspUserLogin");
@@ -72,7 +74,6 @@ private:
                 ids = ids + id + ";";
             }
             info(QString().sprintf("total sub ids:%d,%s", got_ids_.length(), ids.toUtf8().constData()));
-            emit sm()->statusChanged(MDSM_RECVING);
         }
     }
 
@@ -108,7 +109,8 @@ private:
         got_ids_.clear();
     }
 
-    void info(QString msg){
+    void info(QString msg)
+    {
         g_sm->logger()->info(msg);
     }
 
@@ -137,7 +139,7 @@ bool MdSm::init(QString userId, QString password, QString brokerId, QString fron
 
     //check
     if (userId_.length() == 0 || password_.length() == 0
-            || brokerId_.length() == 0 || frontMd_.length() == 0 || flowPathMd_.length() == 0) {
+        || brokerId_.length() == 0 || frontMd_.length() == 0 || flowPathMd_.length() == 0) {
         return false;
     }
     return true;
@@ -194,6 +196,7 @@ QString MdSm::version()
     return MdApi::GetApiVersion();
 }
 
-void MdSm::info(QString msg){
+void MdSm::info(QString msg)
+{
     g_sm->logger()->info(msg);
 }

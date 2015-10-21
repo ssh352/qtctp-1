@@ -9,7 +9,6 @@ enum {
     TDSM_DISCONNECTED = 1,
     TDSM_CONNECTED,
     TDSM_LOGINED,
-    TDSM_RECVING,
     TDSM_LOGOUTED,
     TDSM_STOPPED
 };
@@ -22,11 +21,12 @@ public:
     virtual ~TdSm();
 
 public:
+    static QString version();
     bool init(QString userId, QString password, QString brokerId, QString frontTd, QString flowPathTd,QString idPrefixList);
     void start();
     void logout();
     void stop();
-    static QString version();
+    void queryInstrument();
 
 signals:
     void statusChanged(int state);

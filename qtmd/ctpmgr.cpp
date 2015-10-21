@@ -32,45 +32,22 @@ void CtpMgr::onMdSmStateChanged(int state)
         delete mdsm_thread_;
         mdsm_thread_ = nullptr;
         mdsm_ = nullptr;
+        mdsm_logined_ = false;
 
         emit mdStopped();
     }
     if (state == MDSM_CONNECTED) {
     }
     if (state == MDSM_DISCONNECTED) {
+        mdsm_logined_ = false;
         //析构ringbuffer
         g_sm->dataPump()->freeRingBuffer();
 
         emit mdDisconnect();
     }
     if (state == MDSM_LOGINED) {
-        //开始用tdapi查询合约列表=
-        if (tdsm_ != nullptr) {
-            qFatal("tdsm_ != nullptr");
-            return;
-        }
-
-        // init tdsm
-        tdsm_ = new TdSm;
-        bool res = tdsm_->init(profile()->get("userId").toString(), password_,
-            profile()->get("brokerId").toString(), profile()->get("frontTd").toString(),
-            Profile::flowPathTd(), profile()->get("idPrefixList").toString());
-        if (!res) {
-            delete tdsm_;
-            tdsm_ = nullptr;
-            logger()->info("参数无效，请核对参数=");
-            return;
-        }
-
-        // go...
-        tdsm_thread_ = new QThread;
-        tdsm_->moveToThread(tdsm_thread_);
-        QObject::connect(tdsm_thread_, &QThread::started, tdsm_, &TdSm::start);
-        QObject::connect(tdsm_thread_, &QThread::finished, tdsm_, &TdSm::deleteLater);
-        QObject::connect(tdsm_, &TdSm::statusChanged, this, &CtpMgr::onTdSmStateChanged);
-        QObject::connect(tdsm_, &TdSm::gotInstruments, this, &CtpMgr::onGotInstruments);
-
-        tdsm_thread_->start();
+        mdsm_logined_ = true;
+        tryStartSubscrible();
     }
 }
 
@@ -82,15 +59,20 @@ void CtpMgr::onTdSmStateChanged(int state)
         delete tdsm_thread_;
         tdsm_thread_ = nullptr;
         tdsm_ = nullptr;
+        tdsm_logined_ = false;
     }
 
-    if (state == TDSM_LOGINED) {
-    }
     if (state == TDSM_CONNECTED) {
     }
     if (state == TDSM_DISCONNECTED) {
+        tdsm_logined_ = false;
+    }
+    if (state == TDSM_LOGINED) {
+        tdsm_logined_ = true;
+        tryStartSubscrible();
     }
     if (state == TDSM_LOGOUTED) {
+        tdsm_logined_ = false;
         tdsm_->stop();
     }
 }
@@ -98,13 +80,30 @@ void CtpMgr::onTdSmStateChanged(int state)
 bool CtpMgr::start(QString password)
 {
     // check
-    if (mdsm_ != nullptr) {
-        qFatal("mdsm_!= nullptr");
-        return false;
+    if (mdsm_ != nullptr || tdsm_ != nullptr) {
+        qFatal("mdsm_!= nullptr || tdsm_ != nullptr");
     }
 
     // init mdsm
     password_ = password;
+
+    if (!initMdSm()) {
+        return false;
+    }
+
+    if (!initTdSm()) {
+        delete mdsm_;
+        mdsm_ = nullptr;
+        return false;
+    }
+
+    startMdSm();
+    startTdSm();
+    return true;
+}
+
+bool CtpMgr::initMdSm()
+{
     mdsm_ = new MdSm;
     bool res = mdsm_->init(profile()->get("userId").toString(), password_,
         profile()->get("brokerId").toString(), profile()->get("frontMd").toString(), Profile::flowPathMd());
@@ -114,25 +113,69 @@ bool CtpMgr::start(QString password)
         logger()->info("参数无效，请核对参数=");
         return false;
     }
+    return true;
+}
 
+void CtpMgr::startMdSm()
+{
     // go...
     mdsm_thread_ = new QThread;
     mdsm_->moveToThread(mdsm_thread_);
     QObject::connect(mdsm_thread_, &QThread::started, mdsm_, &MdSm::start);
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_, &MdSm::deleteLater);
     QObject::connect(mdsm_, &MdSm::statusChanged, this, &CtpMgr::onMdSmStateChanged);
+
     mdsm_thread_->start();
+}
+
+bool CtpMgr::initTdSm()
+{
+    tdsm_ = new TdSm;
+    bool res = tdsm_->init(profile()->get("userId").toString(), password_,
+        profile()->get("brokerId").toString(), profile()->get("frontTd").toString(),
+        Profile::flowPathTd(), profile()->get("idPrefixList").toString());
+    if (!res) {
+        delete tdsm_;
+        tdsm_ = nullptr;
+        logger()->info("参数无效，请核对参数=");
+        return false;
+    }
     return true;
+}
+
+void CtpMgr::startTdSm()
+{
+    // go...
+    tdsm_thread_ = new QThread;
+    tdsm_->moveToThread(tdsm_thread_);
+    QObject::connect(tdsm_thread_, &QThread::started, tdsm_, &TdSm::start);
+    QObject::connect(tdsm_thread_, &QThread::finished, tdsm_, &TdSm::deleteLater);
+    QObject::connect(tdsm_, &TdSm::statusChanged, this, &CtpMgr::onTdSmStateChanged);
+    QObject::connect(tdsm_, &TdSm::gotInstruments, this, &CtpMgr::onGotInstruments);
+
+    tdsm_thread_->start();
+}
+
+void CtpMgr::tryStartSubscrible()
+{
+    if (mdsm_logined_ && tdsm_logined_) {
+        tdsm_->queryInstrument();
+    }
+    if (tdsm_ == nullptr) {
+        startTdSm();
+    }
 }
 
 void CtpMgr::stop()
 {
+    // check
+    if (mdsm_ == nullptr) {
+        qFatal("mdsm_ == nullptr");
+    }
+    mdsm_->stop();
+
     if (tdsm_) {
         tdsm_->stop();
-    }
-
-    if (mdsm_) {
-        mdsm_->stop();
     }
 }
 
