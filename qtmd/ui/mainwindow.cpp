@@ -176,13 +176,8 @@ void MainWindow::onGotTick(void* tick, int indexRb, void* rb)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (g_sm->ctpMgr()->running()) {
-        this->hide();
-        event->ignore();
-    }
-    else {
-        event->accept();
-    }
+    this->hide();
+    event->ignore();
 }
 
 void MainWindow::createActions()

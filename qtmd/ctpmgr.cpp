@@ -54,7 +54,7 @@ void CtpMgr::onMdSmStateChanged(int state)
         tdsm_ = new TdSm;
         bool res = tdsm_->init(profile()->get("userId").toString(), password_,
             profile()->get("brokerId").toString(), profile()->get("frontTd").toString(),
-            profile()->flowPathTd(), profile()->get("idPrefixList").toString());
+            Profile::flowPathTd(), profile()->get("idPrefixList").toString());
         if (!res) {
             delete tdsm_;
             tdsm_ = nullptr;
@@ -107,7 +107,7 @@ bool CtpMgr::start(QString password)
     password_ = password;
     mdsm_ = new MdSm;
     bool res = mdsm_->init(profile()->get("userId").toString(), password_,
-        profile()->get("brokerId").toString(), profile()->get("frontMd").toString(), profile()->flowPathMd());
+        profile()->get("brokerId").toString(), profile()->get("frontMd").toString(), Profile::flowPathMd());
     if (!res) {
         delete mdsm_;
         mdsm_ = nullptr;

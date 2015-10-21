@@ -173,7 +173,7 @@ LevelDBBackend::~LevelDBBackend()
 
 void LevelDBBackend::init()
 {
-    QString path = g_sm->profile()->todayDbPath();
+    QString path = Profile::todayDbPath();
     mkDir(path);
     leveldb::Options options;
     options.create_if_missing = true;
