@@ -82,6 +82,10 @@ QString Profile::flowPathTd()
     return QDir::home().absoluteFilePath("qtmd/tdapi/");
 }
 
-QString Profile::dbPath(){
-    return QDir::home().absoluteFilePath("qtmd/data");
+QString Profile::todayDbPath(){
+    return QDir::home().absoluteFilePath("qtmd/data/today");
+}
+
+QString Profile::historyDbPath(){
+    return QDir::home().absoluteFilePath("qtmd/data/history");
 }

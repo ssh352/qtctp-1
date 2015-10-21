@@ -10,13 +10,13 @@
 #include "ctpcmd.h"
 #include <QCloseEvent>
 #include "ApiStruct.h"
-#include "tickform.h"
+#include "ringbufferform.h"
 #include "servicemgr.h"
 #include "profile.h"
 #include "logger.h"
 #include "ctpmgr.h"
 #include "datapump.h"
-#include "historyform.h"
+#include "instrumentsform.h"
 #include <windows.h>
 
 MainWindow::MainWindow(QWidget* parent)
@@ -36,12 +36,12 @@ MainWindow::MainWindow(QWidget* parent)
     this->createTrayIcon();
 
     //设置列=
-    ids_col_ = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
+    instruments_col_ = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
         "LastPrice", "Volume", "OpenInterest",
         "BidPrice1", "BidVolume1", "AskPrice1", "AskVolume1" };
-    this->ui->tableWidget->setColumnCount(ids_col_.length());
-    for (int i = 0; i < ids_col_.length(); i++) {
-        ui->tableWidget->setHorizontalHeaderItem(i, new QTableWidgetItem(ids_col_.at(i)));
+    this->ui->tableWidget->setColumnCount(instruments_col_.length());
+    for (int i = 0; i < instruments_col_.length(); i++) {
+        ui->tableWidget->setHorizontalHeaderItem(i, new QTableWidgetItem(instruments_col_.at(i)));
     }
 }
 
@@ -55,11 +55,11 @@ void MainWindow::init()
     // logger
     QObject::connect(logger(), &Logger::info, this, &MainWindow::onInfo);
     // ctpmgr
-    QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotIds, this, &MainWindow::onGotIds);
+    QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotInstruments, this, &MainWindow::onGotInstruments);
     QObject::connect(g_sm->ctpMgr(), &CtpMgr::mdStopped, this, &MainWindow::resetUI);
     QObject::connect(g_sm->ctpMgr(), &CtpMgr::mdDisconnect, this, &MainWindow::resetUI);
     // datapump
-    QObject::connect(g_sm->dataPump(), &DataPump::gotMdItem, this, &MainWindow::onGotMdItem);
+    QObject::connect(g_sm->dataPump(), &DataPump::gotTick, this, &MainWindow::onGotTick);
 }
 
 void MainWindow::shutdown()
@@ -73,24 +73,24 @@ void MainWindow::onInfo(QString msg)
     ui->listWidget->setCurrentRow(ui->listWidget->count() - 1);
 }
 
-void MainWindow::onGotIds(QStringList ids)
+void MainWindow::onGotInstruments(QStringList ids)
 {
     //设置行，按排序后合约来，一个合约一行=
-    ids_row_.clear();
+    instruments_row_.clear();
     QStringList sorted_ids = ids;
     sorted_ids.sort();
     this->ui->tableWidget->clearContents();
     this->ui->tableWidget->setRowCount(sorted_ids.length());
     for (int i = 0; i < sorted_ids.length(); i++) {
         QString id = sorted_ids.at(i);
-        ids_row_[id] = i;
+        instruments_row_[id] = i;
         QTableWidgetItem* item = new QTableWidgetItem(id);
         ui->tableWidget->setItem(i, 0, item);
     }
 }
 
 void MainWindow::resetUI(){
-    ids_row_.clear();
+    instruments_row_.clear();
     this->ui->tableWidget->clearContents();
     this->ui->tableWidget->setRowCount(0);
 }
@@ -142,9 +142,9 @@ void MainWindow::on_actionStop_triggered()
     ui->actionStop->setEnabled(false);
 }
 
-void MainWindow::onGotMdItem(void* p, int indexRb, void* rb)
+void MainWindow::onGotTick(void* tick, int indexRb, void* rb)
 {
-    auto mdf = (DepthMarketDataField*)p;
+    auto mdf = (DepthMarketDataField*)tick;
 
     QVariantMap mdItem;
     mdItem.insert("InstrumentID", mdf->InstrumentID);
@@ -161,9 +161,9 @@ void MainWindow::onGotMdItem(void* p, int indexRb, void* rb)
 
     //根据id找到对应的行，然后用列的text来在map里面取值设置到item里面=
     QString id = mdItem.value("InstrumentID").toString();
-    int row = ids_row_.value(id);
-    for (int i = 0; i < ids_col_.count(); i++) {
-        QVariant raw_val = mdItem.value(ids_col_.at(i));
+    int row = instruments_row_.value(id);
+    for (int i = 0; i < instruments_col_.count(); i++) {
+        QVariant raw_val = mdItem.value(instruments_col_.at(i));
         QString str_val = raw_val.toString();
         if (raw_val.type() == QMetaType::Double || raw_val.type() == QMetaType::Float) {
             str_val = QString().sprintf("%6.1f", raw_val.toDouble());
@@ -250,7 +250,7 @@ void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 //显示详细数据=
 void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 {
-    TickForm* form = new TickForm();
+    RingBufferForm* form = new RingBufferForm();
     form->setWindowFlags(Qt::Window);
     form->Init(ui->tableWidget->item(row, 0)->text());
     form->show();
@@ -290,7 +290,7 @@ void MainWindow::on_actionDerefZeroCrash_triggered()
 //显示历史列表=
 void MainWindow::on_actionHistory_triggered()
 {
-    HistoryForm* form = new HistoryForm();
+    InstrumentsForm* form = new InstrumentsForm();
     form->setWindowFlags(Qt::Window);
     form->init();
     form->show();

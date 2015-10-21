@@ -26,7 +26,7 @@ void CtpMgr::onMdSmStateChanged(int state)
 {
     if (state == MDSM_STOPPED) {
         //手动退出手动收盘处理=
-        g_sm->dataPump()->freeRb();
+        g_sm->dataPump()->freeRingBuffer();
         mdsm_thread_->quit();
         mdsm_thread_->wait();
         delete mdsm_thread_;
@@ -39,7 +39,7 @@ void CtpMgr::onMdSmStateChanged(int state)
     }
     if (state == MDSM_DISCONNECTED) {
         //自动收盘处理=
-        g_sm->dataPump()->freeRb();
+        g_sm->dataPump()->freeRingBuffer();
 
         emit mdDisconnect();
     }
@@ -68,7 +68,7 @@ void CtpMgr::onMdSmStateChanged(int state)
         QObject::connect(tdsm_thread_, &QThread::started, tdsm_, &TdSm::start);
         QObject::connect(tdsm_thread_, &QThread::finished, tdsm_, &TdSm::deleteLater);
         QObject::connect(tdsm_, &TdSm::statusChanged, this, &CtpMgr::onTdSmStateChanged);
-        QObject::connect(tdsm_, &TdSm::gotIds, this, &CtpMgr::onGotIds);
+        QObject::connect(tdsm_, &TdSm::gotInstruments, this, &CtpMgr::onGotInstruments);
 
         tdsm_thread_->start();
     }
@@ -136,19 +136,18 @@ void CtpMgr::stop()
     }
 }
 
-void CtpMgr::onGotIds(QStringList ids)
+void CtpMgr::onGotInstruments(QStringList ids)
 {
     //初始化datapump
-    g_sm->dataPump()->initRb(ids);
+    g_sm->dataPump()->initRingBuffer(ids);
 
     //退出td
     tdsm_->logout();
 
     // 转发=
-    emit this->gotIds(ids);
-}
+    emit this->gotInstruments(ids);
 
-void CtpMgr::subscrible(QStringList ids){
+    // 开始订阅=
     mdsm_->subscrible(ids);
 }
 

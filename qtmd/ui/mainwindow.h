@@ -25,8 +25,8 @@ public:
 
 public slots:
     void onInfo(QString msg);
-    void onGotIds(QStringList ids);
-    void onGotMdItem(void* item,int indexRb, void* rb);
+    void onGotInstruments(QStringList ids);
+    void onGotTick(void* tick,int indexRb, void* rb);
     void resetUI();
 
 private slots:
@@ -54,8 +54,8 @@ private:
 
 private:
     Ui::MainWindow* ui;
-    QMap<QString,int> ids_row_;
-    QStringList ids_col_;
+    QMap<QString,int> instruments_row_;
+    QStringList instruments_col_;
 
 private:
     QAction *minimizeAction;

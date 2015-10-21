@@ -30,7 +30,7 @@ public:
 
 signals:
     void statusChanged(int state);
-    void gotIds(QStringList ids);
+    void gotInstruments(QStringList ids);
     void runCmd(void* cmd);
 
 protected:

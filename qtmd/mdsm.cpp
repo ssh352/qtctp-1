@@ -82,7 +82,7 @@ private:
 
     void OnRtnDepthMarketData(DepthMarketDataField* pDepthMarketData) override
     {
-        g_sm->dataPump()->put(pDepthMarketData);
+        g_sm->dataPump()->putTick(pDepthMarketData);
     }
 
 private:

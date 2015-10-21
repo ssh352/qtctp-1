@@ -1,42 +1,42 @@
-#include "tickform.h"
-#include "ui_tickform.h"
+#include "ringbufferform.h"
+#include "ui_ringbufferform.h"
 #include "mdsm.h"
 #include "ApiStruct.h"
 #include "ringbuffer.h"
 #include "servicemgr.h"
 #include "ctpmgr.h"
 #include "datapump.h"
-#include "dbform.h"
+#include "historyform.h"
 
-TickForm::TickForm(QWidget* parent)
+RingBufferForm::RingBufferForm(QWidget* parent)
     : QWidget(parent)
-    , ui(new Ui::TickForm)
+    , ui(new Ui::RingBufferForm)
 {
     ui->setupUi(this);
 
     //设置列=
-    ids_col_ = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
+    instruments_col_ = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
         "LastPrice", "Volume", "OpenInterest",
         "BidPrice1", "BidVolume1", "AskPrice1", "AskVolume1" };
-    this->ui->tableWidget->setColumnCount(ids_col_.length());
-    for (int i = 0; i < ids_col_.length(); i++) {
-        ui->tableWidget->setHorizontalHeaderItem(i, new QTableWidgetItem(ids_col_.at(i)));
+    this->ui->tableWidget->setColumnCount(instruments_col_.length());
+    for (int i = 0; i < instruments_col_.length(); i++) {
+        ui->tableWidget->setHorizontalHeaderItem(i, new QTableWidgetItem(instruments_col_.at(i)));
     }
 }
 
-TickForm::~TickForm()
+RingBufferForm::~RingBufferForm()
 {
     delete ui;
 }
 
-void TickForm::Init(QString id)
+void RingBufferForm::Init(QString id)
 {
     id_ = id;
-    this->setWindowTitle(QString("tick-")+id);
-    scanMd();
+    this->setWindowTitle(QString("ringbuffer-")+id);
+    scanTicks();
 }
 
-void TickForm::scanMd()
+void RingBufferForm::scanTicks()
 {
     DataPump* datapump = g_sm->dataPump();
     if(!datapump){
@@ -47,9 +47,6 @@ void TickForm::scanMd()
     ui->tableWidget->setRowCount(0);
 
     RingBuffer* rb = datapump->getRingBuffer(id_);
-    if (rb == nullptr) {
-        return;
-    }
 
     int head = rb->head();
     if (head < 0) {
@@ -62,7 +59,7 @@ void TickForm::scanMd()
             return;
         }
 
-        onGotMdItem(p);
+        onGotTick(p);
         head -= 1;
         if (head == -1) {
             head += rb->count();
@@ -70,9 +67,9 @@ void TickForm::scanMd()
     }
 }
 
-void TickForm::onGotMdItem(void* p)
+void RingBufferForm::onGotTick(void* tick)
 {
-    auto mdf = (DepthMarketDataField*)p;
+    auto mdf = (DepthMarketDataField*)tick;
 
     QVariantMap mdItem;
     mdItem.insert("InstrumentID", mdf->InstrumentID);
@@ -90,8 +87,8 @@ void TickForm::onGotMdItem(void* p)
     //根据id找到对应的行，然后用列的text来在map里面取值设置到item里面=
     int row = ui->tableWidget->rowCount();
     ui->tableWidget->insertRow(row);
-    for (int i = 0; i < ids_col_.count(); i++) {
-        QVariant raw_val = mdItem.value(ids_col_.at(i));
+    for (int i = 0; i < instruments_col_.count(); i++) {
+        QVariant raw_val = mdItem.value(instruments_col_.at(i));
         QString str_val = raw_val.toString();
         if (raw_val.type() == QMetaType::Double || raw_val.type() == QMetaType::Float) {
             str_val = QString().sprintf("%6.1f", raw_val.toDouble());
@@ -102,15 +99,15 @@ void TickForm::onGotMdItem(void* p)
     }
 }
 
-void TickForm::on_historyButton_clicked()
+void RingBufferForm::on_historyButton_clicked()
 {
-    DbForm* form = new DbForm();
+    HistoryForm* form = new HistoryForm();
     form->setWindowFlags(Qt::Window);
     form->Init(id_);
     form->show();
 }
 
-void TickForm::on_refreshButton_clicked()
+void RingBufferForm::on_refreshButton_clicked()
 {
-    scanMd();
+    scanTicks();
 }

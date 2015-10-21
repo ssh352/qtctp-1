@@ -2,34 +2,35 @@
 #define HISTORYFORM_H
 
 #include <QWidget>
-#include <QStringList>
 
 namespace Ui {
 class HistoryForm;
 }
 
-class HistoryForm : public QWidget
-{
+class HistoryForm : public QWidget {
     Q_OBJECT
 
 public:
-    explicit HistoryForm(QWidget *parent = 0);
+    explicit HistoryForm(QWidget* parent = 0);
     ~HistoryForm();
-
-public:
-    void init();
+    void Init(QString id);
 
 private slots:
-    void on_refreshButton_clicked();
-    void on_tableWidget_cellDoubleClicked(int row, int column);
+    void on_first128_clicked();
+
+    void on_next128_clicked();
+
+    void on_pre128_clicked();
+
+    void on_last128_clicked();
 
 private:
-    void refresh();
-    void onGotItem(void* p);
+    void onGotTick(void* tick);
 
 private:
-    Ui::HistoryForm *ui;
-    QStringList ids_col_;
+    Ui::HistoryForm* ui;
+    QStringList instruments_col_;
+    QString id_;
 };
 
 #endif // HISTORYFORM_H

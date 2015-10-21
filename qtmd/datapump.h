@@ -19,22 +19,23 @@ public:
     explicit DataPump(QObject* parent = 0);
     void init();
     void shutdown();
-    void put(void* mdItem);
+    void putTick(void* tick);
+    void putInstrument(void* instrument);
     RingBuffer* getRingBuffer(QString id);
     leveldb::DB* getLevelDB();
-    void initRb(QStringList ids);
-    void freeRb();
+    void initRingBuffer(QStringList ids);
+    void freeRingBuffer();
 
 signals:
-    void gotMdItem(void* mdItem, int indexRb, void* rb);
-    void initedRb(QStringList ids);
-    void freedRb();
+    void gotTick(void* tick, int indexRb, void* rb);
 
 public slots:
+    void initInstrumentLocator();
 
 private:
-    void* saveRb(void* mdItem, int& indexRb, RingBuffer*& rb);
-    void fixTickMs(void* mdItem, int indexRb, RingBuffer* rb);
+    void* putTickToRingBuffer(void* tick, int& indexRb, RingBuffer*& rb);
+    void fixTickMs(void* tick, int indexRb, RingBuffer* rb);
+    void initTickLocator(QString id);
 
 private:
     QMap<QString, RingBuffer*> rbs_;
@@ -53,15 +54,12 @@ public:
     leveldb::DB* getLevelDB();
 
 signals:
+    void opened();
 
 public slots:
-    void put(void* mdItem, int indexRb, void* rb);
-    void freeDb();
-    void initDb(QStringList ids);
+    void putTick(void* tick, int indexRb, void* rb);
 
 private:
-    void fillRb(QStringList ids);
-    void loadRbFromBackend(QStringList ids);
 
 private:
     leveldb::DB* db_ = nullptr;

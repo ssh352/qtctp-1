@@ -22,7 +22,8 @@ public:
 
     QString flowPathMd();
     QString flowPathTd();
-    QString dbPath();
+    QString todayDbPath();
+    QString historyDbPath();
 
 signals:
     void keyValueChanged(QString key, QVariant value);

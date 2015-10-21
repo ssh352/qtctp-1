@@ -18,18 +18,16 @@ public:
     bool start(QString password);
     void stop();
     bool running();
-    MdSm* mdsm(){return mdsm_;}
-    void subscrible(QStringList ids);
 
 signals:
-    void gotIds(QStringList ids);
+    void gotInstruments(QStringList ids);
     void mdStopped();
     void mdDisconnect();
 
 private slots:
     void onMdSmStateChanged(int state);
     void onTdSmStateChanged(int state);
-    void onGotIds(QStringList ids);
+    void onGotInstruments(QStringList ids);
 
 private:
     Profile* profile();

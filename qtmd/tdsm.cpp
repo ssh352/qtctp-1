@@ -79,7 +79,7 @@ private:
                     prefix = idPrefixList_.at(i);
                     if (low_id.startsWith(prefix)) {
                         ids_ << id;
-                        initId(id, pInstrument);
+                        g_sm->dataPump()->putInstrument(pInstrument);
                         break;
                     }
                 }
@@ -92,7 +92,7 @@ private:
                 ids = ids + id + ";";
             }
             info(QString().sprintf("total got ids:%d,%s", ids_.length(), ids.toUtf8().constData()));
-            emit sm()->gotIds(ids_);
+            emit sm()->gotInstruments(ids_);
         }
     }
 
@@ -120,39 +120,6 @@ private:
     void info(QString msg)
     {
         g_sm->logger()->info(msg);
-    }
-
-    //直接写=
-    void initId(QString id, InstrumentField* pInstrument)
-    {
-        leveldb::DB* db = g_sm->dataPump()->getLevelDB();
-        if (db == nullptr) {
-            qFatal("db == nullptr");
-            return;
-        }
-
-        //加入id
-        {
-            InstrumentField* idItem = pInstrument;
-            QString key;
-            leveldb::Slice val((const char*)idItem, sizeof(InstrumentField));
-            leveldb::WriteOptions options;
-            key = QStringLiteral("id-") + id;
-            db->Put(options, key.toStdString(), val);
-        }
-
-        //初始化tick定位=
-        {
-            DepthMarketDataField* mdItem = new (DepthMarketDataField);
-            memset(mdItem, 0, sizeof(DepthMarketDataField));
-            QString key;
-            leveldb::Slice val((const char*)mdItem, sizeof(DepthMarketDataField));
-            leveldb::WriteOptions options;
-            key = QStringLiteral("tick-") + id + QStringLiteral("+");
-            db->Put(options, key.toStdString(), val);
-            key = QStringLiteral("tick-") + id + QStringLiteral("=");
-            db->Put(options, key.toStdString(), val);
-        }
     }
 
 private:

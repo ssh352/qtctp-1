@@ -29,8 +29,6 @@ SOURCES += main.cpp\
     ui/mainwindow.cpp \
     ui/configdialog.cpp \
     ui/logindialog.cpp \
-    ui/tickform.cpp \
-    ui/dbform.cpp \
     servicemgr.cpp \
     profile.cpp \
     logger.cpp \
@@ -42,14 +40,14 @@ SOURCES += main.cpp\
     ctpmgr.cpp \
     datapump.cpp \
     crashhandler.cpp \
-    ui/historyform.cpp
+    ui/instrumentsform.cpp \
+    ui/historyform.cpp \
+    ui/ringbufferform.cpp
 
 
 HEADERS  += ui/mainwindow.h \
     ui/configdialog.h \
     ui/logindialog.h \
-    ui/tickform.h \
-    ui/dbform.h \
     servicemgr.h \
     profile.h \
     logger.h \
@@ -61,15 +59,17 @@ HEADERS  += ui/mainwindow.h \
     ctpmgr.h \
     datapump.h \
     crashhandler.h \
-    ui/historyform.h
+    ui/instrumentsform.h \
+    ui/historyform.h \
+    ui/ringbufferform.h
 
 
 FORMS    += ui/mainwindow.ui \
     ui/configdialog.ui \
     ui/logindialog.ui \
-    ui/tickform.ui \
-    ui/dbform.ui \
-    ui/historyform.ui
+    ui/instrumentsform.ui \
+    ui/historyform.ui \
+    ui/ringbufferform.ui
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)

@@ -26,6 +26,7 @@ Logger::Logger(QObject* parent)
 
 void Logger::init()
 {
+#ifndef _DEBUG
     // Disable the message box for assertions.(see setcrt)
     _CrtSetReportMode(_CRT_ASSERT, 0);
 
@@ -33,6 +34,7 @@ void Logger::init()
     UINT new_flags = SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
     UINT existing_flags = SetErrorMode(new_flags);
     SetErrorMode(existing_flags | new_flags);
+#endif
 
     QString reporter = "C:/Program Files (x86)/Windows Kits/8.0/Debuggers/x86/windbg.exe";
     QString params = " -z";
