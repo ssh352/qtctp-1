@@ -53,7 +53,7 @@ MainWindow::~MainWindow()
 void MainWindow::init()
 {
     // logger
-    QObject::connect(logger(), &Logger::info, this, &MainWindow::onInfo);
+    QObject::connect(logger(), &Logger::gotInfo, this, &MainWindow::onInfo);
     // ctpmgr
     QObject::connect(g_sm->ctpMgr(), &CtpMgr::gotInstruments, this, &MainWindow::onGotInstruments);
     QObject::connect(g_sm->ctpMgr(), &CtpMgr::mdStopped, this, &MainWindow::resetUI);

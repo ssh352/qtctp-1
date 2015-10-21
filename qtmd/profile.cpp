@@ -89,3 +89,7 @@ QString Profile::todayDbPath(){
 QString Profile::historyDbPath(){
     return QDir::home().absoluteFilePath("qtmd/data/history");
 }
+
+QString Profile::logPath(){
+    return QDir::home().absoluteFilePath("qtmd/log.txt");
+}

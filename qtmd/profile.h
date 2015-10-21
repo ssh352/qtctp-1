@@ -20,10 +20,11 @@ public:
     void put(QString k, QVariant v);
     void commit();
 
-    QString flowPathMd();
-    QString flowPathTd();
-    QString todayDbPath();
-    QString historyDbPath();
+    static QString flowPathMd();
+    static QString flowPathTd();
+    static QString todayDbPath();
+    static QString historyDbPath();
+    static QString logPath();
 
 signals:
     void keyValueChanged(QString key, QVariant value);
