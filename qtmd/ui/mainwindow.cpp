@@ -290,10 +290,7 @@ void MainWindow::on_actionDerefZeroCrash_triggered()
 //显示历史列表=
 void MainWindow::on_actionHistory_triggered()
 {
-    InstrumentsForm* form = new InstrumentsForm();
-    form->setWindowFlags(Qt::Window);
-    form->init();
-    form->show();
+    logger()->info("todo");
 }
 
 void MainWindow::on_actionQFatal_triggered()
@@ -310,4 +307,17 @@ void MainWindow::on_actionDebugbreak_triggered()
 void MainWindow::on_actionDebugBreak_triggered()
 {
     DebugBreak();
+}
+
+void MainWindow::on_actionToday_triggered()
+{
+    InstrumentsForm* form = new InstrumentsForm();
+    form->setWindowFlags(Qt::Window);
+    form->init();
+    form->show();
+}
+
+void MainWindow::on_actionMerge_triggered()
+{
+    logger()->info("todo");
 }

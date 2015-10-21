@@ -25,7 +25,7 @@ void CtpMgr::shutdown()
 void CtpMgr::onMdSmStateChanged(int state)
 {
     if (state == MDSM_STOPPED) {
-        //手动退出手动收盘处理=
+        //析构ringbuffer
         g_sm->dataPump()->freeRingBuffer();
         mdsm_thread_->quit();
         mdsm_thread_->wait();
@@ -38,7 +38,7 @@ void CtpMgr::onMdSmStateChanged(int state)
     if (state == MDSM_CONNECTED) {
     }
     if (state == MDSM_DISCONNECTED) {
-        //自动收盘处理=
+        //析构ringbuffer
         g_sm->dataPump()->freeRingBuffer();
 
         emit mdDisconnect();
@@ -138,7 +138,7 @@ void CtpMgr::stop()
 
 void CtpMgr::onGotInstruments(QStringList ids)
 {
-    //初始化datapump
+    //初始化ringbuffer
     g_sm->dataPump()->initRingBuffer(ids);
 
     //退出td

@@ -73,7 +73,9 @@
     <property name="title">
      <string>data</string>
     </property>
+    <addaction name="actionToday"/>
     <addaction name="actionHistory"/>
+    <addaction name="actionMerge"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -137,9 +139,9 @@
     <string>DerefZeroCrash</string>
    </property>
   </action>
-  <action name="actionHistory">
+  <action name="actionToday">
    <property name="text">
-    <string>history</string>
+    <string>today</string>
    </property>
   </action>
   <action name="actionQFatal">
@@ -155,6 +157,16 @@
   <action name="actionDebugBreak">
    <property name="text">
     <string>DebugBreak</string>
+   </property>
+  </action>
+  <action name="actionHistory">
+   <property name="text">
+    <string>history</string>
+   </property>
+  </action>
+  <action name="actionMerge">
+   <property name="text">
+    <string>merge</string>
    </property>
   </action>
  </widget>
