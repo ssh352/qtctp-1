@@ -64,6 +64,15 @@ public:
         return buf;
     }
 
+    void load(int index, void* item)
+    {
+        head_ = item_count_ - 1;
+        index = index % item_count_;
+        char* buf = buffer_ + index * item_len_;
+        items_[index] = buf;
+        memcpy(buf, item, item_len_);
+    }
+
 private:
     int item_count_;
     int item_len_;

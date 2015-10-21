@@ -36,6 +36,7 @@ private:
     void* putTickToRingBuffer(void* tick, int& indexRb, RingBuffer*& rb);
     void fixTickMs(void* tick, int indexRb, RingBuffer* rb);
     void initTickLocator(QString id);
+    void loadRingBufferFromBackend(QStringList ids);
 
 private:
     QMap<QString, RingBuffer*> rbs_;

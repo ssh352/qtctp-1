@@ -40,7 +40,7 @@ void HistoryForm::on_first128_clicked()
     leveldb::ReadOptions options;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
-        return;
+        qFatal("NewIterator == nullptr");
     }
 
     //第一个是tick-id+
@@ -81,7 +81,7 @@ void HistoryForm::on_next128_clicked()
     leveldb::ReadOptions options;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
-        return;
+        qFatal("NewIterator == nullptr");
     }
 
     //第一个是tick-id+
@@ -126,7 +126,7 @@ void HistoryForm::on_pre128_clicked()
     leveldb::ReadOptions options;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
-        return;
+        qFatal("NewIterator == nullptr");
     }
 
     //第一个是tick-id+
@@ -167,7 +167,7 @@ void HistoryForm::on_last128_clicked()
     leveldb::ReadOptions options;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
-        return;
+        qFatal("NewIterator == nullptr");
     }
 
     //第一个是ID-tick+

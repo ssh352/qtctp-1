@@ -72,11 +72,50 @@ void DataPump::initRingBuffer(QStringList ids)
         qFatal("rbs_.count() != 0");
     }
 
-    for (int i = 0; i < ids.count(); i++) {
-        QString id = ids.at(i);
+    for (auto id : ids) {
         RingBuffer* rb = new RingBuffer;
         rb->init(sizeof(DepthMarketDataField), ringBufferLen_);
         rbs_.insert(id, rb);
+    }
+
+    loadRingBufferFromBackend(ids);
+}
+
+//修补tick的ms还是需要回读一下=
+void DataPump::loadRingBufferFromBackend(QStringList ids)
+{
+    auto db = getLevelDB();
+    for (auto id : ids) {
+        auto rb = getRingBuffer(id);
+
+        leveldb::ReadOptions options;
+        leveldb::Iterator* it = db->NewIterator(options);
+        if (!it) {
+            qFatal("NewIterator == nullptr");
+        }
+
+        //第一个是tick-id+
+        //最后一个是tick-id=
+        QString key;
+        key = QStringLiteral("tick-") + id + QStringLiteral("=");
+        it->Seek(leveldb::Slice(key.toStdString()));
+        if (it->Valid()) {
+            it->Prev();
+        }
+        int count = 0;
+        for (; it->Valid() && count < rb->count(); it->Prev()) {
+            count++;
+            if (it->value().size() != sizeof(DepthMarketDataField)) {
+                qFatal("it->value().size() != sizeof(DepthMarketDataField)");
+            }
+            auto mdf = (DepthMarketDataField*)it->value().data();
+            //遇到了前后两个结束item
+            if(mdf->InstrumentID[0]==0){
+                break;
+            }
+            rb->load(rb->count() - count, mdf);
+        }
+        delete it;
     }
 }
 
