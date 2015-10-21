@@ -162,6 +162,9 @@ void CtpMgr::tryStartSubscrible()
         tdsm_->queryInstrument();
     }
     if (tdsm_ == nullptr) {
+        if(!initTdSm()){
+            qFatal("initTdSm == false");
+        }
         startTdSm();
     }
 }
