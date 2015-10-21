@@ -74,6 +74,7 @@ FORMS    += ui/mainwindow.ui \
 include(../ctpsdk.pri)
 include(../leveldb.pri)
 include(../breakpad.pri)
+include(../qjsonrpc.pri)
 
 RESOURCES += \
     systray.qrc
