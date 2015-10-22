@@ -31,11 +31,8 @@ public:
     TraderApi* tdapi() { return tdapi_; }
 
 public slots:
-    void onRunCmd(void* p)
-    {
-        CtpCmd* cmd = (CtpCmd*)p;
-        cmds_.append(cmd);
-    }
+    void onRunCmd(void* p,unsigned int delayTick);
+    void onReset();
 
 private:
     void timerEvent(QTimerEvent* event) override

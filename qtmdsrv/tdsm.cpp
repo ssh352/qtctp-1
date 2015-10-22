@@ -16,55 +16,59 @@ public:
         : sm_(sm)
     {
     }
-    void disableAutoLogin()
-    {
-        autoLogin_ = false;
-    }
 
 private:
     void OnFrontConnected() override
     {
         info("TdSmSpi::OnFrontConnected");
         emit sm()->statusChanged(TDSM_CONNECTED);
-        if (autoLogin_) {
-            emit sm()->runCmd(new CmdTdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
-        }
     }
 
+    // 客户端与服务端连接断开后，交易接口会自动尝试重新连接，频率是每 5 秒一次。(CTPSDK)
     // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据=
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
-    // logout也会导致一次disconnected+connected，4097
+    // logout也会导致一次disconnected+connected，0x1001
     void OnFrontDisconnected(int nReason) override
     {
-        info(QString().sprintf("TdSmSpi::OnFrontDisconnected,nReason=%d", nReason));
-        emit sm()->statusChanged(TDSM_DISCONNECTED);
+        info(QString().sprintf("TdSmSpi::OnFrontDisconnected,nReason=0x%x", nReason));
 
         resetData();
+        emit sm()->statusChanged(TDSM_DISCONNECTED);
     }
 
+    // 这个spi不用被调用=（CTPSDK）
     void OnHeartBeatWarning(int nTimeLapse) override
     {
         info("TdSmSpi::OnHeartBeatWarning");
     }
 
-    //errorId=3，msg=CTP:不合法的登陆=
-    //errorId=7，msg=CTP:还没有初始化=
-    //1. 并不是connected就可以登陆的=
-    //2. 如果connected后不能登录，对于7，会过一会来一个disconnected+connected，所以不用处理=
+    // errorId=3，msg=CTP:不合法的登陆=
+    // errorId=7，msg=CTP:还没有初始化=
+    // errorId=8,msg=CTP:前置不活跃=
+    // 1. 并不是connected就可以登陆的=
+    // 2. 如果connected后不能登录，对于7，会过一会来一个disconnected+connected，所以不用处理=
+    // 3. 发现对于errorid=7，不一定会disconnect后再connected，需要自己去发包=
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         info("TdSmSpi::OnRspUserLogin");
-        if (bIsLast && !isErrorRsp(pRspInfo, nRequestID)) {
-            emit sm()->statusChanged(TDSM_LOGINED);
-            return;
+        if (bIsLast){
+           if(isErrorRsp(pRspInfo, nRequestID)) {
+               emit sm()->statusChanged(TDSM_LOGINFAIL);
+           }else{
+               emit sm()->statusChanged(TDSM_LOGINED);
+           }
         }
     }
 
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         info("TdSmSpi::OnRspUserLogout");
-        if (!isErrorRsp(pRspInfo, nRequestID) && bIsLast) {
-            emit sm()->statusChanged(TDSM_LOGOUTED);
+        if (bIsLast){
+            if(isErrorRsp(pRspInfo, nRequestID)){
+                emit sm()->statusChanged(TDSM_LOGOUTFAIL);
+            }else{
+                emit sm()->statusChanged(TDSM_LOGOUTED);
+            }
         }
     }
 
@@ -137,7 +141,7 @@ private:
     TdSm* sm_;
     QStringList ids_;
     QStringList idPrefixList_;
-    bool autoLogin_ = true;
+    //bool autoLogin_ = true;
 };
 
 ///////////
@@ -198,14 +202,6 @@ void TdSm::start()
     tdspi_ = nullptr;
 }
 
-// logout之后会有一个disconnect/connect...先disableautologin
-void TdSm::logout()
-{
-    info("TdSm::logout");
-    tdspi_->disableAutoLogin();
-    emit this->runCmd(new CmdTdLogout(userId(), brokerId()));
-}
-
 void TdSm::stop()
 {
     info("TdSm::stop");
@@ -229,8 +225,22 @@ void TdSm::info(QString msg)
     g_sm->logger()->info(msg);
 }
 
+
+void TdSm::login(unsigned int delayTick){
+    info("TdSm::login");
+    emit this->runCmd(new CmdTdLogin(userId_,password_,brokerId_),delayTick);
+}
+
+//目前，通过 ReqUserLogout 登出系统的话，会先将现有的连接断开，再重新建立一个新的连接(CTPSDK)
+// logout之后会有一个disconnect/connect...先disableautologin
+void TdSm::logout()
+{
+    info("TdSm::logout");
+    emit this->runCmd(new CmdTdLogout(userId(), brokerId()),0);
+}
+
 void TdSm::queryInstrument()
 {
     info("TdSm::queryInstrument");
-    emit this->runCmd(new CmdTdQueryInstrument());
+    emit this->runCmd(new CmdTdQueryInstrument(),0);
 }

@@ -10,6 +10,7 @@ enum {
     MDSM_DISCONNECTED = 1,
     MDSM_CONNECTED,
     MDSM_LOGINED,
+    MDSM_LOGINFAIL,
     MDSM_STOPPED
 };
 
@@ -23,12 +24,13 @@ public:
     static QString version();
     bool init(QString name, QString pwd, QString brokerId, QString front, QString flowPath);
     void start();
+    void login(unsigned int delayTick);
     void stop();
     void subscrible(QStringList ids);
 
 signals:
     void statusChanged(int state);
-    void runCmd(void* cmd);
+    void runCmd(void* cmd,unsigned int delayTick);
 
 protected:
     MdApi* mdapi() { return mdapi_; }

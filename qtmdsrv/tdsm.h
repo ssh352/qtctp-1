@@ -9,7 +9,9 @@ enum {
     TDSM_DISCONNECTED = 1,
     TDSM_CONNECTED,
     TDSM_LOGINED,
+    TDSM_LOGINFAIL,
     TDSM_LOGOUTED,
+    TDSM_LOGOUTFAIL,
     TDSM_STOPPED
 };
 
@@ -24,6 +26,7 @@ public:
     static QString version();
     bool init(QString userId, QString password, QString brokerId, QString frontTd, QString flowPathTd,QString idPrefixList);
     void start();
+    void login(unsigned int delayTick);
     void logout();
     void stop();
     void queryInstrument();
@@ -31,7 +34,7 @@ public:
 signals:
     void statusChanged(int state);
     void gotInstruments(QStringList ids);
-    void runCmd(void* cmd);
+    void runCmd(void* cmd,unsigned int delayTick);
 
 protected:
     TraderApi* tdapi() { return tdapi_; }

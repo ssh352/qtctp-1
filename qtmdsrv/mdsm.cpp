@@ -23,19 +23,19 @@ private:
     {
         info("MdSmSpi::OnFrontConnected");
         emit sm()->statusChanged(MDSM_CONNECTED);
-        emit sm()->runCmd(new CmdMdLogin(sm()->userId(), sm()->password(), sm()->brokerId()));
     }
 
     // 如果网络异常，会直接调用OnFrontDisconnected，需要重置状态数据=
     // 网络错误当再次恢复时候，会自动重连重新走OnFrontConnected
     void OnFrontDisconnected(int nReason) override
     {
-        info(QString().sprintf("MdSmSpi::OnFrontDisconnected,nReason=%d", nReason));
-        emit sm()->statusChanged(MDSM_DISCONNECTED);
+        info(QString().sprintf("MdSmSpi::OnFrontDisconnected,nReason=0x%x", nReason));
 
         resetData();
+        emit sm()->statusChanged(MDSM_DISCONNECTED);
     }
 
+    // 这个spi不用被调用=（CTPSDK）
     void OnHeartBeatWarning(int nTimeLapse) override
     {
         info("MdSmSpi::OnHeartBeatWarning");
@@ -45,12 +45,16 @@ private:
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
         info("MdSmSpi::OnRspUserLogin");
-        if (!isErrorRsp(pRspInfo, nRequestID) && bIsLast) {
-            emit sm()->statusChanged(MDSM_LOGINED);
+        if (bIsLast){
+           if(isErrorRsp(pRspInfo, nRequestID)) {
+               emit sm()->statusChanged(MDSM_LOGINFAIL);
+           }else{
+               emit sm()->statusChanged(MDSM_LOGINED);
+           }
         }
     }
 
-    // logout在tdapi里面是有效的=
+    // logout在tdapi里面是有效的,mdapi无效不用处理=
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
     }
@@ -185,12 +189,6 @@ void MdSm::stop()
     mdapi_->Release();
 }
 
-void MdSm::subscrible(QStringList ids)
-{
-    info("MdSm::subscrible");
-    emit this->runCmd(new CmdMdSubscrible(ids));
-}
-
 QString MdSm::version()
 {
     return MdApi::GetApiVersion();
@@ -199,4 +197,15 @@ QString MdSm::version()
 void MdSm::info(QString msg)
 {
     g_sm->logger()->info(msg);
+}
+
+void MdSm::login(unsigned int delayTick){
+    info("MdSm::login");
+    emit this->runCmd(new CmdMdLogin(userId_,password_,brokerId_),delayTick);
+}
+
+void MdSm::subscrible(QStringList ids)
+{
+    info("MdSm::subscrible");
+    emit this->runCmd(new CmdMdSubscrible(ids),0);
 }

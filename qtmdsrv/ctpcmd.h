@@ -28,6 +28,8 @@ public:
     TraderApi* tdapi();
     MdApi* mdapi();
     void info(QString msg);
+    void setExpires(unsigned int expires){expires_ = expires;}
+    unsigned int expires(){return expires_;}
 
 public:
     static void setIdSeed(int idSeed) { g_reqId_ = idSeed; }
@@ -38,6 +40,7 @@ protected:
 protected:
     int reqId_ = 0;
     int result_ = 0;
+    unsigned int expires_ = 0;
     static int g_reqId_;
 };
 

@@ -24,19 +24,10 @@ void CtpMgr::shutdown()
 
 void CtpMgr::onMdSmStateChanged(int state)
 {
-    if (state == MDSM_STOPPED) {
-        //析构ringbuffer
-        g_sm->dataPump()->freeRingBuffer();
-        mdsm_thread_->quit();
-        mdsm_thread_->wait();
-        delete mdsm_thread_;
-        mdsm_thread_ = nullptr;
-        mdsm_ = nullptr;
-        mdsm_logined_ = false;
-
-        emit mdStopped();
-    }
     if (state == MDSM_CONNECTED) {
+        if(autoLoginMd_){
+            mdsm_->login(1000);
+        }
     }
     if (state == MDSM_DISCONNECTED) {
         mdsm_logined_ = false;
@@ -49,20 +40,29 @@ void CtpMgr::onMdSmStateChanged(int state)
         mdsm_logined_ = true;
         tryStartSubscrible();
     }
+    if (state == MDSM_LOGINFAIL){
+        mdsm_->login(60*1000);
+    }
+    if (state == MDSM_STOPPED) {
+        //析构ringbuffer
+        g_sm->dataPump()->freeRingBuffer();
+        mdsm_thread_->quit();
+        mdsm_thread_->wait();
+        delete mdsm_thread_;
+        mdsm_thread_ = nullptr;
+        mdsm_ = nullptr;
+        mdsm_logined_ = false;
+
+        emit mdStopped();
+    }
 }
 
 void CtpMgr::onTdSmStateChanged(int state)
 {
-    if (state == TDSM_STOPPED) {
-        tdsm_thread_->quit();
-        tdsm_thread_->wait();
-        delete tdsm_thread_;
-        tdsm_thread_ = nullptr;
-        tdsm_ = nullptr;
-        tdsm_logined_ = false;
-    }
-
     if (state == TDSM_CONNECTED) {
+        if(autoLoginTd_){
+            tdsm_->login(1000);
+        }
     }
     if (state == TDSM_DISCONNECTED) {
         tdsm_logined_ = false;
@@ -71,9 +71,24 @@ void CtpMgr::onTdSmStateChanged(int state)
         tdsm_logined_ = true;
         tryStartSubscrible();
     }
+    if (state == TDSM_LOGINFAIL){
+        tdsm_->login(60*1000);
+    }
     if (state == TDSM_LOGOUTED) {
         tdsm_logined_ = false;
         tdsm_->stop();
+    }
+    if (state == TDSM_LOGOUTFAIL){
+        tdsm_logined_ = false;
+        tdsm_->stop();
+    }
+    if (state == TDSM_STOPPED) {
+        tdsm_thread_->quit();
+        tdsm_thread_->wait();
+        delete tdsm_thread_;
+        tdsm_thread_ = nullptr;
+        tdsm_ = nullptr;
+        tdsm_logined_ = false;
     }
 }
 
@@ -125,6 +140,7 @@ void CtpMgr::startMdSm()
     QObject::connect(mdsm_thread_, &QThread::finished, mdsm_, &MdSm::deleteLater);
     QObject::connect(mdsm_, &MdSm::statusChanged, this, &CtpMgr::onMdSmStateChanged);
 
+    autoLoginMd_ = true;
     mdsm_thread_->start();
 }
 
@@ -153,6 +169,7 @@ void CtpMgr::startTdSm()
     QObject::connect(tdsm_, &TdSm::statusChanged, this, &CtpMgr::onTdSmStateChanged);
     QObject::connect(tdsm_, &TdSm::gotInstruments, this, &CtpMgr::onGotInstruments);
 
+    autoLoginTd_ = true;
     tdsm_thread_->start();
 }
 
@@ -188,6 +205,7 @@ void CtpMgr::onGotInstruments(QStringList ids)
     g_sm->dataPump()->initRingBuffer(ids);
 
     //退出td
+    autoLoginTd_ = false;
     tdsm_->logout();
 
     // 转发=

@@ -45,6 +45,8 @@ private:
     TdSm* tdsm_ = nullptr;
     QThread* tdsm_thread_ = nullptr;
     bool tdsm_logined_ = false;
+    bool autoLoginTd_ = true;
+    bool autoLoginMd_ = true;
 
     QString password_;
 };
