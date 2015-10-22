@@ -3,11 +3,13 @@
 
 #include <QObject>
 
-class Profile;
 class Logger;
+class Profile;
 class CtpCmdMgr;
 class CtpMgr;
 class DataPump;
+class RpcService;
+class PushService;
 
 class ServiceMgr : public QObject {
     Q_OBJECT
@@ -17,11 +19,13 @@ public:
     void shutdown();
 
 public:
-    Profile* profile();
     Logger* logger();
+    Profile* profile();
     CtpCmdMgr* ctpCmdMgr();
     CtpMgr* ctpMgr();
     DataPump* dataPump();
+    RpcService* rpcService();
+    PushService* pushService();
 
 signals:
 
@@ -31,11 +35,13 @@ private:
     void check();
 
 private:
-    Profile* profile_ = nullptr;
     Logger* logger_ = nullptr;
+    Profile* profile_ = nullptr;
     CtpCmdMgr* ctpCmdMgr_ = nullptr;
     CtpMgr* ctpMgr_ = nullptr;
     DataPump* dataPump_ = nullptr;
+    RpcService* rpcService_ = nullptr;
+    PushService* pushService_ = nullptr;
 
     bool shutdown_ = false;
     bool init_ = false;

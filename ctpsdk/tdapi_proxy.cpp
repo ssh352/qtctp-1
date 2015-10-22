@@ -1,6 +1,6 @@
 #include "TraderApi.h"
 #include <Windows.h>
-#include "utils.h"
+#include "sdk_utils.h"
 #include <QDir>
 
 // protype,__stdcall,__cdecl,__fastcall

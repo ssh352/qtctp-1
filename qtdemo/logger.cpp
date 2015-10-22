@@ -1,6 +1,7 @@
 #include "logger.h"
 #include "CrashHandler.h"
 #include "profile.h"
+#include "utils.h"
 
 #include <QDir>
 #include <QCoreApplication>
@@ -48,7 +49,9 @@ void Logger::init()
 
     preMessageHandler = qInstallMessageHandler(myMessageHandler);
 
-    log_.setFileName(Profile::logPath());
+    QString logFileName = Profile::logPath();
+    mkDir(logFileName);
+    log_.setFileName(logFileName);
     log_.open(QIODevice::WriteOnly|QIODevice::Text|QIODevice::Append|QIODevice::Unbuffered);
 }
 

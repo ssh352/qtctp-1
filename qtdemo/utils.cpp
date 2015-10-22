@@ -4,6 +4,7 @@
 #include <QDataStream>
 #include <QDir>
 #include <QTextCodec>
+#include <windows.h>
 
 void mkDir(QString local_file)
 {
@@ -11,28 +12,6 @@ void mkDir(QString local_file)
     QString dirPath = info.absoluteDir().path();
     QDir dir;
     dir.mkpath(dirPath);
-}
-
-bool extractQrcFile(QString qrc_file, QString local_file)
-{
-    QFile inFile(qrc_file);
-    QFile outFile(local_file);
-
-    mkDir(local_file);
-
-    if (!inFile.open(QIODevice::ReadOnly))
-        return false;
-    if (!outFile.open(QIODevice::WriteOnly)) {
-        inFile.close();
-        return false;
-    }
-
-    outFile.write(inFile.readAll());
-
-    inFile.close();
-    outFile.close();
-
-    return true;
 }
 
 QString gbk2utf16(char* gbk){
@@ -43,17 +22,6 @@ QString gbk2utf16(char* gbk){
 
 namespace base {
 namespace debug {
-
-#if defined(COMPILER_MSVC)
-#pragma optimize("", off)
-#endif
-
-void Alias(const void* var) {
-}
-
-#if defined(COMPILER_MSVC)
-#pragma optimize("", on)
-#endif
 
 Base::Base(Derived* derived)
     : derived_(derived) {
@@ -73,6 +41,35 @@ Derived::Derived()
 
 void Derived::DoSomething() {
 }
+
+#if defined(Q_CC_MSVC)
+#pragma optimize("", off)
+#endif
+
+void Alias(const void* var) {
+}
+
+#if defined(Q_CC_MSVC)
+#pragma optimize("", on)
+#endif
+
+// Disable optimizations for the StackTrace::StackTrace function. It is
+// important to disable at least frame pointer optimization ("y"), since
+// that breaks CaptureStackBackTrace() and prevents StackTrace from working
+// in Release builds (it may still be janky if other frames are using FPO,
+// but at least it will make it further).
+#if defined(Q_CC_MSVC)
+#pragma optimize("", off)
+#endif
+
+StackTrace::StackTrace() {
+  // When walking our own stack, use CaptureStackBackTrace().
+  count_ = CaptureStackBackTrace(0, kMaxTraces, trace_, NULL);
+}
+
+#if defined(Q_CC_MSVC)
+#pragma optimize("", on)
+#endif
 
 }  // namespace debug
 }  // namespace base

@@ -4,26 +4,14 @@
 #
 #-------------------------------------------------
 
-QT       += core gui script
+QT       += core gui script websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = qtmd
 TEMPLATE = app
 
-# warn
-win32-msvc*:QMAKE_CXXFLAGS_WARN_ON -= -w34100
-win32-msvc*:QMAKE_CXXFLAGS += -wd4819
-
-# pdb
-win32-msvc*:QMAKE_CFLAGS_RELEASE += -Zi
-win32-msvc*:QMAKE_CXXFLAGS_RELEASE += -Zi
-win32-msvc*:QMAKE_LFLAGS_RELEASE += /DEBUG /OPT:REF
-
-win32:LIBS += user32.lib
-
-INCLUDEPATH += \
-    $$PWD
+include(../qtctp.pri)
 
 SOURCES += main.cpp\
     ui/mainwindow.cpp \
@@ -42,7 +30,10 @@ SOURCES += main.cpp\
     crashhandler.cpp \
     ui/instrumentsform.cpp \
     ui/historyform.cpp \
-    ui/ringbufferform.cpp
+    ui/ringbufferform.cpp \
+    rpcservice.cpp \
+    pushservice.cpp \
+    utils.cpp
 
 
 HEADERS  += ui/mainwindow.h \
@@ -61,7 +52,10 @@ HEADERS  += ui/mainwindow.h \
     crashhandler.h \
     ui/instrumentsform.h \
     ui/historyform.h \
-    ui/ringbufferform.h
+    ui/ringbufferform.h \
+    rpcservice.h \
+    pushservice.h \
+    utils.h
 
 
 FORMS    += ui/mainwindow.ui \

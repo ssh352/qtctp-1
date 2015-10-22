@@ -1,9 +1,6 @@
 #include "servicemgr.h"
 #include "profile.h"
 #include "logger.h"
-#include "ctpcmdmgr.h"
-#include "ctpmgr.h"
-#include "datapump.h"
 
 ServiceMgr* g_sm = nullptr;
 
@@ -27,15 +24,9 @@ void ServiceMgr::init()
 
     logger_ = new Logger;
     profile_ = new Profile;
-    ctpCmdMgr_ = new CtpCmdMgr;
-    ctpMgr_ = new CtpMgr;
-    dataPump_ = new DataPump;
 
     logger_->init();
     profile_->init();
-    ctpCmdMgr_->init();
-    ctpMgr_->init();
-    dataPump_->init();
 }
 
 //注意shutdown的顺序，先shutdown的可以访问之后的=
@@ -47,20 +38,8 @@ void ServiceMgr::shutdown()
         return;
     }
 
-    dataPump_->shutdown();
-    ctpMgr_->shutdown();
-    ctpCmdMgr_->shutdown();
     profile_->shutdown();
     logger_->shutdown();
-
-    delete dataPump_;
-    dataPump_ = nullptr;
-
-    delete ctpMgr_;
-    ctpMgr_ = nullptr;
-
-    delete ctpCmdMgr_;
-    ctpCmdMgr_ = nullptr;
 
     delete profile_;
     profile_ = nullptr;
@@ -90,25 +69,4 @@ Logger* ServiceMgr::logger()
     check();
 
     return this->logger_;
-}
-
-CtpCmdMgr* ServiceMgr::ctpCmdMgr()
-{
-    check();
-
-    return this->ctpCmdMgr_;
-}
-
-CtpMgr* ServiceMgr::ctpMgr()
-{
-    check();
-
-    return this->ctpMgr_;
-}
-
-DataPump* ServiceMgr::dataPump()
-{
-    check();
-
-    return this->dataPump_;
 }

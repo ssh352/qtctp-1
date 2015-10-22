@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->setupUi(this);
     ui->splitter->setStretchFactor(0, 3);
     ui->splitter->setStretchFactor(1, 1);
-    setWindowTitle("qtmd");
+    setWindowTitle(Profile::appName());
     icon_ = QIcon(":/images/heart.png");
     setWindowIcon(icon_);
 
@@ -97,7 +97,7 @@ void MainWindow::resetUI(){
 
 void MainWindow::on_actionVersion_triggered()
 {
-    logger()->info(QString("qtmd version: ") + QString(__DATE__) + " " + QString(__TIME__));
+    logger()->info(QString("app version: ") + QString(__DATE__) + " " + QString(__TIME__));
     logger()->info(QString("mdapi version: ") + MdSm::version());
     logger()->info(QString("tdapi version: ") + TdSm::version());
 }
@@ -207,7 +207,7 @@ void MainWindow::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setContextMenu(trayIconMenu);
     trayIcon->setIcon(icon_);
-    trayIcon->setToolTip("qtmd");
+    trayIcon->setToolTip(Profile::appName());
 
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
         this, SLOT(onTrayIconActivated(QSystemTrayIcon::ActivationReason)));
