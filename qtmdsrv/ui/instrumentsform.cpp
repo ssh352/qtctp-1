@@ -48,6 +48,7 @@ void InstrumentsForm::refresh()
     }
 
     leveldb::ReadOptions options;
+    options.fill_cache = false;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
         return;

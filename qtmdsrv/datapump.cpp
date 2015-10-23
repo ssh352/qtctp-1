@@ -25,7 +25,7 @@ void DataPump::init()
     QObject::connect(db_thread_, &QThread::started, db_backend_, &LevelDBBackend::init);
     QObject::connect(db_thread_, &QThread::finished, db_backend_, &LevelDBBackend::shutdown);
     QObject::connect(this, &DataPump::gotTick, db_backend_, &LevelDBBackend::putTick);
-    QObject::connect(db_backend_,&LevelDBBackend::opened,this,&DataPump::initInstrumentLocator);
+    QObject::connect(db_backend_, &LevelDBBackend::opened, this, &DataPump::initInstrumentLocator);
 
     db_thread_->start();
 }
@@ -46,13 +46,80 @@ void DataPump::putTick(void* tick)
 {
     int indexRb = -1;
     RingBuffer* rb = nullptr;
+
+    if (shouldSkipTick(tick)) {
+        return;
+    }
+
     void* newTick = this->putTickToRingBuffer(tick, indexRb, rb);
     fixTickMs(newTick, indexRb, rb);
 
     emit this->gotTick(newTick, indexRb, rb);
 }
 
-void DataPump::putInstrument(void *pInstrument){
+//1.如果和前一个tick一样就不保存了（时间，最新价，成交量，持仓量，买一卖一价，买一卖一申报量）
+//白糖会在每次开盘时候，先发一个上次的收盘tick但日期是不一样的，晕。如23号早上9:00:00会
+//收到一个22号的23:29:59的tick但日期确实23号=
+//2.如果时间无效不保存，如有效区间[09:15:00-15:30:00)[21:00:00-23:30:00) [00:00:00-02:30:00)
+//3.todo(sunwangme):IH在9:15:00时候出现了买一卖一价非常庞大应该是没有初始化的问题，需要处理=
+// 2&3交给客户端去做更合理，mdsrv只负责收原始数据=
+bool DataPump::shouldSkipTick(void *tick){
+    if (0){
+        char* timeTick = ((DepthMarketDataField*)tick)->UpdateTime;
+        bool valid = false;
+
+        // 金融期货 IF 中金所=
+        if (memcmp(timeTick, "09:15:00", 8) >= 0 && memcmp(timeTick, "15:30:00", 8) < 0) {
+            valid = true;
+        };
+
+        // 商品期货 SR 郑商所=
+        if (memcmp(timeTick, "09:00:00", 8) >= 0 && memcmp(timeTick, "15:00:00", 8) < 0) {
+            valid = true;
+        };
+        if (memcmp(timeTick, "21:00:00", 8) >= 0 && memcmp(timeTick, "23:30:00", 8) < 0) {
+            valid = true;
+        };
+
+        // 商品期货 AG 上期所=
+        if (memcmp(timeTick, "09:00:00", 8) >= 0 && memcmp(timeTick, "15:00:00", 8) < 0) {
+            valid = true;
+        };
+        if (memcmp(timeTick, "21:00:00", 8) >= 0 && memcmp(timeTick, "23:59:59", 8) <= 0) {
+            valid = true;
+        };
+        if (memcmp(timeTick, "00:00:00", 8) >= 0 && memcmp(timeTick, "02:30:00", 8) < 0) {
+            valid = true;
+        };
+
+        if (!valid) {
+            return true;
+        }
+    }
+
+    if(1){
+        DepthMarketDataField* mdf = (DepthMarketDataField*)tick;
+        QString id = mdf->InstrumentID;
+        RingBuffer* rb = getRingBuffer(id);
+        DepthMarketDataField* lastMdf = (DepthMarketDataField*)rb->get(rb->head());
+        if (lastMdf &&
+                (memcmp(mdf->UpdateTime, lastMdf->UpdateTime, sizeof(mdf->UpdateTime) - 1) == 0) &&
+                (mdf->LastPrice == lastMdf->LastPrice) &&
+                (mdf->Volume == lastMdf->Volume) &&
+                (mdf->OpenInterest == lastMdf->OpenInterest) &&
+                (mdf->BidPrice1 == lastMdf->BidPrice1) &&
+                (mdf->BidVolume1 == lastMdf->BidVolume1) &&
+                (mdf->AskPrice1 == lastMdf->AskPrice1) &&
+                (mdf->AskVolume1 == lastMdf->AskVolume1)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void DataPump::putInstrument(void* pInstrument)
+{
     InstrumentField* instrument = (InstrumentField*)pInstrument;
     QString id = instrument->InstrumentID;
     leveldb::DB* db = getLevelDB();
@@ -89,6 +156,7 @@ void DataPump::loadRingBufferFromBackend(QStringList ids)
         auto rb = getRingBuffer(id);
 
         leveldb::ReadOptions options;
+        options.fill_cache = false;
         leveldb::Iterator* it = db->NewIterator(options);
         if (!it) {
             qFatal("NewIterator == nullptr");
@@ -110,7 +178,7 @@ void DataPump::loadRingBufferFromBackend(QStringList ids)
             }
             auto mdf = (DepthMarketDataField*)it->value().data();
             //遇到了前后两个结束item
-            if(mdf->InstrumentID[0]==0){
+            if (mdf->InstrumentID[0] == 0) {
                 break;
             }
             rb->load(rb->count() - count, mdf);
@@ -141,14 +209,15 @@ void* DataPump::putTickToRingBuffer(void* tick, int& index, RingBuffer*& rb)
 RingBuffer* DataPump::getRingBuffer(QString id)
 {
     RingBuffer* rb = rbs_.value(id);
-    if (rb == nullptr){
+    if (rb == nullptr) {
         qFatal("rb == nullptr");
     }
 
     return rb;
 }
 
-leveldb::DB* DataPump::getLevelDB(){
+leveldb::DB* DataPump::getLevelDB()
+{
     return db_backend_->getLevelDB();
 }
 
@@ -171,7 +240,8 @@ void DataPump::fixTickMs(void* tick, int indexRb, RingBuffer* rb)
 }
 
 //初始化instrument定位=
-void DataPump::initInstrumentLocator(){
+void DataPump::initInstrumentLocator()
+{
     leveldb::DB* db = getLevelDB();
 
     InstrumentField* idItem = new (InstrumentField);
@@ -186,7 +256,8 @@ void DataPump::initInstrumentLocator(){
 }
 
 //初始化tick定位=
-void DataPump::initTickLocator(QString id){
+void DataPump::initTickLocator(QString id)
+{
     leveldb::DB* db = getLevelDB();
 
     DepthMarketDataField* tick = new (DepthMarketDataField);
@@ -226,7 +297,8 @@ void LevelDBBackend::init()
     if (status.ok()) {
         db_ = db;
         emit opened();
-    }else{
+    }
+    else {
         qFatal("leveldb::DB::Open fail");
     }
 }
@@ -252,9 +324,8 @@ void LevelDBBackend::putTick(void* tick, int indexRb, void* rb)
 
 leveldb::DB* LevelDBBackend::getLevelDB()
 {
-    if(db_ == nullptr){
+    if (db_ == nullptr) {
         qFatal("db_ == nullptr");
     }
     return db_;
 }
-

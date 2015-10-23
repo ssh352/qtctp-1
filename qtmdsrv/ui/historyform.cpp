@@ -4,6 +4,8 @@
 #include "datapump.h"
 #include "ApiStruct.h"
 #include <leveldb/db.h>
+#include "QMessageBox"
+#include <QDebug>
 
 HistoryForm::HistoryForm(QWidget* parent)
     : QWidget(parent)
@@ -38,6 +40,7 @@ void HistoryForm::on_first128_clicked()
 {
     leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     leveldb::ReadOptions options;
+    options.fill_cache = false;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
         qFatal("NewIterator == nullptr");
@@ -79,6 +82,7 @@ void HistoryForm::on_next128_clicked()
 
     leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     leveldb::ReadOptions options;
+    options.fill_cache = false;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
         qFatal("NewIterator == nullptr");
@@ -124,6 +128,7 @@ void HistoryForm::on_pre128_clicked()
 
     leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     leveldb::ReadOptions options;
+    options.fill_cache = false;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
         qFatal("NewIterator == nullptr");
@@ -165,13 +170,14 @@ void HistoryForm::on_last128_clicked()
 {
     leveldb::DB* db = g_sm->dataPump()->getLevelDB();
     leveldb::ReadOptions options;
+    options.fill_cache = false;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
         qFatal("NewIterator == nullptr");
     }
 
-    //第一个是ID-tick+
-    //最后一个是ID-tick=
+    //第一个是tick-id+
+    //最后一个是tick-id=
     QString key = QStringLiteral("tick-") + id_ + QStringLiteral("=");
 
     ui->tableWidget->clearContents();
@@ -195,6 +201,66 @@ void HistoryForm::on_last128_clicked()
         onGotTick(mdf);
     }
     delete it;
+}
+
+void HistoryForm::on_seekButton_clicked(){
+    leveldb::DB* db = g_sm->dataPump()->getLevelDB();
+    leveldb::ReadOptions options;
+    options.fill_cache = false;
+    leveldb::Iterator* it = db->NewIterator(options);
+    if (!it) {
+        qFatal("NewIterator == nullptr");
+    }
+
+    //第一个是tick-id+
+    //最后一个是tick-id=
+    QString key = ui->lineEdit->text();
+
+    ui->tableWidget->clearContents();
+    ui->tableWidget->setRowCount(0);
+
+    QString msg("not found,input format:\ntick-IF1511-\ntick-IF1511-20151023-1304\ntick-IF1511-20151023-1304-0");
+    it->Seek(leveldb::Slice(key.toStdString()));
+    if(!it->Valid()){
+        QMessageBox::warning(this,"seek",msg);
+    }
+    int count = 0;
+    for (; it->Valid() && count < 128; it->Prev()) {
+        //遇到了instrument数据=
+        if (it->value().size() != sizeof(DepthMarketDataField)) {
+            if (count ==0) QMessageBox::warning(this,"seek",msg);
+            break;
+        }
+        auto mdf = (DepthMarketDataField*)it->value().data();
+        //遇到了前后两个结束item
+        if (mdf->InstrumentID[0] == 0) {
+            if (count ==0) QMessageBox::warning(this,"seek",msg);
+            break;
+        }
+        onGotTick(mdf);
+        count++;
+    }
+    delete it;
+}
+
+void HistoryForm::on_delButton_clicked(){
+    leveldb::DB* db = g_sm->dataPump()->getLevelDB();
+    QString key = ui->lineEdit->text();
+    leveldb::ReadOptions options;
+    std::string val;
+    leveldb::Status status = db->Get(options,key.toStdString(),&val);
+    if (status.ok()){
+        leveldb::WriteOptions options;
+        status = db->Delete(options,key.toStdString());
+    }
+
+    if(status.ok()){
+        QMessageBox::about(this,"del","ok");
+    }
+    else{
+       QString errStr = QString::fromStdString(status.ToString());
+       QMessageBox::warning(this,"del",errStr);
+    }
 }
 
 void HistoryForm::onGotTick(void* tick)

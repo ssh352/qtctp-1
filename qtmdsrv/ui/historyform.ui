@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>679</width>
-    <height>470</height>
+    <width>895</width>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,6 +56,27 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="placeholderText">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="seekButton">
+       <property name="text">
+        <string>seek</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="delButton">
+       <property name="text">
+        <string>delete</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

@@ -17,12 +17,11 @@ public:
 
 private slots:
     void on_first128_clicked();
-
     void on_next128_clicked();
-
     void on_pre128_clicked();
-
     void on_last128_clicked();
+    void on_seekButton_clicked();
+    void on_delButton_clicked();
 
 private:
     void onGotTick(void* tick);

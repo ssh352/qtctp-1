@@ -37,6 +37,7 @@ private:
     void fixTickMs(void* tick, int indexRb, RingBuffer* rb);
     void initTickLocator(QString id);
     void loadRingBufferFromBackend(QStringList ids);
+    bool shouldSkipTick(void* tick);
 
 private:
     QMap<QString, RingBuffer*> rbs_;
