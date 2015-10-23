@@ -8,6 +8,7 @@
 #include "logger.h"
 #include <QThread>
 #include "datapump.h"
+#include "ctpcmdmgr.h"
 
 CtpMgr::CtpMgr(QObject* parent)
     : QObject(parent)
@@ -16,6 +17,8 @@ CtpMgr::CtpMgr(QObject* parent)
 
 void CtpMgr::init()
 {
+    QObject::connect(this,&CtpMgr::mdDisconnect,g_sm->ctpCmdMgr(),&CtpCmdMgr::onReset);
+    QObject::connect(this,&CtpMgr::mdStopped,g_sm->ctpCmdMgr(),&CtpCmdMgr::onReset);
 }
 
 void CtpMgr::shutdown()

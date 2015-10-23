@@ -52,8 +52,17 @@
     <addaction name="actionDebugbreak"/>
     <addaction name="actionDebugBreak"/>
    </widget>
+   <widget class="QMenu" name="menuScript">
+    <property name="title">
+     <string>script</string>
+    </property>
+    <addaction name="actionText"/>
+    <addaction name="actionHello"/>
+    <addaction name="actionDebug"/>
+   </widget>
    <addaction name="menuSystem"/>
    <addaction name="menuDebug"/>
+   <addaction name="menuScript"/>
    <addaction name="menuAbout"/>
   </widget>
   <action name="actionQuit">
@@ -94,6 +103,21 @@
   <action name="actionDebugBreak">
    <property name="text">
     <string>DebugBreak</string>
+   </property>
+  </action>
+  <action name="actionHello">
+   <property name="text">
+    <string>hello</string>
+   </property>
+  </action>
+  <action name="actionText">
+   <property name="text">
+    <string>text</string>
+   </property>
+  </action>
+  <action name="actionDebug">
+   <property name="text">
+    <string>debug</string>
    </property>
   </action>
  </widget>

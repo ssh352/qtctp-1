@@ -1,6 +1,7 @@
 #include "servicemgr.h"
 #include "profile.h"
 #include "logger.h"
+#include "scriptmgr.h"
 
 ServiceMgr* g_sm = nullptr;
 
@@ -24,9 +25,11 @@ void ServiceMgr::init()
 
     logger_ = new Logger;
     profile_ = new Profile;
+    scriptMgr_ = new ScriptMgr;
 
     logger_->init();
     profile_->init();
+    scriptMgr_->init();
 }
 
 //注意shutdown的顺序，先shutdown的可以访问之后的=
@@ -38,8 +41,12 @@ void ServiceMgr::shutdown()
         return;
     }
 
+    scriptMgr_->shutdown();
     profile_->shutdown();
     logger_->shutdown();
+
+    delete scriptMgr_;
+    scriptMgr_ = nullptr;
 
     delete profile_;
     profile_ = nullptr;
@@ -69,4 +76,10 @@ Logger* ServiceMgr::logger()
     check();
 
     return this->logger_;
+}
+
+ScriptMgr* ServiceMgr::scriptMgr(){
+    check();
+
+    return this->scriptMgr_;
 }

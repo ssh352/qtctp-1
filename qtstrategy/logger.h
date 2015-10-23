@@ -12,7 +12,7 @@ public:
     explicit Logger(QObject *parent = 0);
     void init();
     void shutdown();
-    void info(QString msg);
+    Q_INVOKABLE void info(QString msg);
 
 signals:
     void gotInfo(QString msg);

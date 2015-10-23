@@ -29,12 +29,17 @@ private slots:
     void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void on_actionQuit_triggered();
     void on_actionVersion_triggered();
+
     void on_actionPureCallCrash_triggered();
     void on_actionInvalidParamCrash_triggered();
     void on_actionDerefZeroCrash_triggered();
     void on_actionQFatal_triggered();
     void on_actionDebugbreak_triggered();
     void on_actionDebugBreak_triggered();
+
+    void on_actionHello_triggered();
+    void on_actionText_triggered();
+    void on_actionDebug_triggered();
 
 private:
     void closeEvent (QCloseEvent *event) override;

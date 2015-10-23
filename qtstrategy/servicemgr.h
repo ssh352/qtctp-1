@@ -5,6 +5,7 @@
 
 class Logger;
 class Profile;
+class ScriptMgr;
 
 class ServiceMgr : public QObject {
     Q_OBJECT
@@ -16,6 +17,7 @@ public:
 public:
     Logger* logger();
     Profile* profile();
+    ScriptMgr* scriptMgr();
 
 signals:
 
@@ -27,6 +29,7 @@ private:
 private:
     Logger* logger_ = nullptr;
     Profile* profile_ = nullptr;
+    ScriptMgr* scriptMgr_ = nullptr;
 
     bool shutdown_ = false;
     bool init_ = false;

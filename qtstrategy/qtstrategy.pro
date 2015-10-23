@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui script scripttools
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -19,18 +19,21 @@ SOURCES += main.cpp\
     logger.cpp \
     profile.cpp \
     servicemgr.cpp \
-    utils.cpp
+    utils.cpp \
+    scriptmgr.cpp
 
 HEADERS  += ui/mainwindow.h \
     crashhandler.h \
     logger.h \
     profile.h \
     servicemgr.h \
-    utils.h
+    utils.h \
+    scriptmgr.h
 
 FORMS    += ui/mainwindow.ui
 
 include(../breakpad.pri)
 
 RESOURCES += \
-    systray.qrc
+    systray.qrc \
+    helloscript.qrc

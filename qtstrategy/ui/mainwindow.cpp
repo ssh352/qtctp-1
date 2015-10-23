@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "utils.h"
 #include <windows.h>
+#include "scriptmgr.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -156,3 +157,17 @@ void MainWindow::on_actionDebugBreak_triggered()
     DebugBreak();
 }
 
+void MainWindow::on_actionHello_triggered()
+{
+    g_sm->scriptMgr()->scriptHello();
+}
+
+void MainWindow::on_actionText_triggered()
+{
+    g_sm->scriptMgr()->scriptText();
+}
+
+void MainWindow::on_actionDebug_triggered()
+{
+    g_sm->scriptMgr()->scriptDebug();
+}
