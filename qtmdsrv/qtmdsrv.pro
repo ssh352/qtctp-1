@@ -70,6 +70,7 @@ include(../leveldb.pri)
 include(../breakpad.pri)
 include(../qjsonrpc.pri)
 include(../qcustomplot.pri)
+include(../qwt.pri)
 
 RESOURCES += \
     systray.qrc
