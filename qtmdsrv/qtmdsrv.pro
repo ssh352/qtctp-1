@@ -69,6 +69,7 @@ include(../ctpsdk.pri)
 include(../leveldb.pri)
 include(../breakpad.pri)
 include(../qjsonrpc.pri)
+include(../qcustomplot.pri)
 
 RESOURCES += \
     systray.qrc

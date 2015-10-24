@@ -1,5 +1,5 @@
 #include "InstrumentsForm.h"
-#include "ui_InstrumentsForm.h"
+#include "ui_instrumentsform.h"
 #include "historyform.h"
 #include "servicemgr.h"
 #include "datapump.h"

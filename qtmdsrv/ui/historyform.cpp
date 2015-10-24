@@ -1,5 +1,5 @@
 #include "historyform.h"
-#include "ui_HistoryForm.h"
+#include "ui_historyform.h"
 #include "servicemgr.h"
 #include "datapump.h"
 #include "ApiStruct.h"
@@ -21,6 +21,13 @@ HistoryForm::HistoryForm(QWidget* parent)
     for (int i = 0; i < instruments_col_.length(); i++) {
         ui->tableWidget->setHorizontalHeaderItem(i, new QTableWidgetItem(instruments_col_.at(i)));
     }
+
+    //设置上下分割=
+    ui->splitter->setStretchFactor(0, 1);
+    ui->splitter->setStretchFactor(1, 1);
+
+    //设置graph
+    initGraph();
 }
 
 HistoryForm::~HistoryForm()
@@ -59,6 +66,7 @@ void HistoryForm::on_first128_clicked()
         it->Next();
     }
     int count = 0;
+    x_.clear();y_.clear();
     for (; it->Valid() && count < 128; it->Next()) {
         count++;
         if (it->value().size() != sizeof(DepthMarketDataField)) {
@@ -69,9 +77,11 @@ void HistoryForm::on_first128_clicked()
         if (mdf->InstrumentID[0] == 0) {
             break;
         }
+        x_.append(count);
         onGotTick(mdf);
     }
     delete it;
+    drawGraph();
 }
 
 void HistoryForm::on_next128_clicked()
@@ -105,6 +115,7 @@ void HistoryForm::on_next128_clicked()
         it->Next();
     }
     int count = 0;
+    x_.clear();y_.clear();
     for (; it->Valid() && count < 128; it->Next()) {
         count++;
         if (it->value().size() != sizeof(DepthMarketDataField)) {
@@ -115,9 +126,11 @@ void HistoryForm::on_next128_clicked()
         if (mdf->InstrumentID[0] == 0) {
             break;
         }
+        x_.append(count);
         onGotTick(mdf);
     }
     delete it;
+    drawGraph();
 }
 
 void HistoryForm::on_pre128_clicked()
@@ -151,6 +164,7 @@ void HistoryForm::on_pre128_clicked()
         it->Prev();
     }
     int count = 0;
+    x_.clear();y_.clear();
     for (; it->Valid() && count < 128; it->Prev()) {
         count++;
         if (it->value().size() != sizeof(DepthMarketDataField)) {
@@ -161,9 +175,11 @@ void HistoryForm::on_pre128_clicked()
         if (mdf->InstrumentID[0] == 0) {
             break;
         }
+        x_.append(count);
         onGotTick(mdf);
     }
     delete it;
+    drawGraph();
 }
 
 void HistoryForm::on_last128_clicked()
@@ -188,6 +204,7 @@ void HistoryForm::on_last128_clicked()
         it->Prev();
     }
     int count = 0;
+    x_.clear();y_.clear();
     for (; it->Valid() && count < 128; it->Prev()) {
         count++;
         if (it->value().size() != sizeof(DepthMarketDataField)) {
@@ -198,9 +215,11 @@ void HistoryForm::on_last128_clicked()
         if (mdf->InstrumentID[0] == 0) {
             break;
         }
+        x_.append(count);
         onGotTick(mdf);
     }
     delete it;
+    drawGraph();
 }
 
 void HistoryForm::on_seekButton_clicked(){
@@ -225,6 +244,7 @@ void HistoryForm::on_seekButton_clicked(){
         QMessageBox::warning(this,"seek",msg);
     }
     int count = 0;
+    x_.clear();y_.clear();
     for (; it->Valid() && count < 128; it->Prev()) {
         //遇到了instrument数据=
         if (it->value().size() != sizeof(DepthMarketDataField)) {
@@ -237,10 +257,12 @@ void HistoryForm::on_seekButton_clicked(){
             if (count ==0) QMessageBox::warning(this,"seek",msg);
             break;
         }
-        onGotTick(mdf);
         count++;
+        onGotTick(mdf);
+        x_.append(count);
     }
     delete it;
+    drawGraph();
 }
 
 void HistoryForm::on_delButton_clicked(){
@@ -266,6 +288,7 @@ void HistoryForm::on_delButton_clicked(){
 void HistoryForm::onGotTick(void* tick)
 {
     auto mdf = (DepthMarketDataField*)tick;
+    y_.append(mdf->LastPrice);
 
     QVariantMap mdItem;
     mdItem.insert("InstrumentID", mdf->InstrumentID);
@@ -293,4 +316,20 @@ void HistoryForm::onGotTick(void* tick)
         QTableWidgetItem* item = new QTableWidgetItem(str_val);
         ui->tableWidget->setItem(row, i, item);
     }
+}
+
+void HistoryForm::initGraph()
+{
+    ui->qcustomplot->addGraph();
+}
+
+void HistoryForm::drawGraph(){
+    ui->qcustomplot->graph()->setData(x_, y_);
+    ui->qcustomplot->graph()->rescaleAxes(false);
+    ui->qcustomplot->xAxis->scaleRange(1.1, ui->qcustomplot->xAxis->range().center());
+    ui->qcustomplot->yAxis->scaleRange(1.1, ui->qcustomplot->yAxis->range().center());
+    ui->qcustomplot->xAxis->setTicks(true);
+    ui->qcustomplot->yAxis->setTicks(true);
+    ui->qcustomplot->axisRect()->setupFullAxesBox();
+    ui->qcustomplot->replot();
 }
