@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>904</width>
-    <height>563</height>
+    <width>1018</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -86,16 +86,16 @@
       <enum>Qt::Vertical</enum>
      </property>
      <widget class="QTableWidget" name="tableWidget"/>
-     <widget class="QCustomPlot" name="qcustomplot" native="true"/>
+     <widget class="QwtPlot" name="tickPlot" native="true"/>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QCustomPlot</class>
+   <class>QwtPlot</class>
    <extends>QWidget</extends>
-   <header>qcustomplot.h</header>
+   <header>qwt_plot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

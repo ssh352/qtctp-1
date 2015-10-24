@@ -23,7 +23,7 @@ HistoryForm::HistoryForm(QWidget* parent)
     }
 
     //设置上下分割=
-    ui->splitter->setStretchFactor(0, 1);
+    ui->splitter->setStretchFactor(0, 2);
     ui->splitter->setStretchFactor(1, 1);
 
     //设置graph
@@ -317,19 +317,47 @@ void HistoryForm::onGotTick(void* tick)
         ui->tableWidget->setItem(row, i, item);
     }
 }
-
+#ifdef USE_QCUSTOMPLOT
 void HistoryForm::initGraph()
 {
-    ui->qcustomplot->addGraph();
+    ui->tickPlot->addGraph();
 }
 
 void HistoryForm::drawGraph(){
-    ui->qcustomplot->graph()->setData(x_, y_);
-    ui->qcustomplot->graph()->rescaleAxes(false);
-    ui->qcustomplot->xAxis->scaleRange(1.1, ui->qcustomplot->xAxis->range().center());
-    ui->qcustomplot->yAxis->scaleRange(1.1, ui->qcustomplot->yAxis->range().center());
-    ui->qcustomplot->xAxis->setTicks(true);
-    ui->qcustomplot->yAxis->setTicks(true);
-    ui->qcustomplot->axisRect()->setupFullAxesBox();
-    ui->qcustomplot->replot();
+    ui->tickPlot->graph()->setData(x_, y_);
+    ui->tickPlot->graph()->rescaleAxes(false);
+    ui->tickPlot->xAxis->scaleRange(1.1, ui->tickPlot->xAxis->range().center());
+    ui->tickPlot->yAxis->scaleRange(1.1, ui->tickPlot->yAxis->range().center());
+    ui->tickPlot->xAxis->setTicks(true);
+    ui->tickPlot->yAxis->setTicks(true);
+    ui->tickPlot->axisRect()->setupFullAxesBox();
+    ui->tickPlot->replot();
 }
+#else
+#include "qwt_plot_curve.h"
+#include "qwt_plot_canvas.h"
+#include "qwt_plot_grid.h"
+void HistoryForm::initGraph()
+{
+    QwtPlotCanvas *canvas = new QwtPlotCanvas();
+    canvas->setFrameStyle( QFrame::NoFrame );
+    canvas->setBorderRadius( 3 );
+    ui->tickPlot->setCanvas( canvas );
+    ui->tickPlot->setCanvasBackground( Qt::white );
+
+    QwtPlotGrid *grid = new QwtPlotGrid;
+    grid->setPen( Qt::gray, 0 , Qt::DotLine );
+    grid->attach( ui->tickPlot );
+
+    QwtPlotCurve *curve = new QwtPlotCurve();
+    curve->setPen( Qt::blue, 1 ),
+    curve->setRenderHint( QwtPlotItem::RenderAntialiased, true );
+    curve->attach( ui->tickPlot );
+    curve_ = curve;
+}
+
+void HistoryForm::drawGraph(){
+    curve_->setSamples(x_,y_);
+    ui->tickPlot->replot();
+}
+#endif

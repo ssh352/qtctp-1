@@ -9,7 +9,7 @@ QT += network
 
 # check if we need to build qjson
 lessThan(QT_MAJOR_VERSION, 5) {
-    include($$QJSONRPC_SRC/json/json.pri)
+    #include($$QJSONRPC_SRC/json/json.pri)
 }
 
 PRIVATE_HEADERS += \

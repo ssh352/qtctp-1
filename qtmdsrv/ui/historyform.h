@@ -7,7 +7,10 @@
 namespace Ui {
 class HistoryForm;
 }
-class QCustomPlot;
+
+#ifndef USE_QCUSTOMPLOT
+class QwtPlotCurve;
+#endif
 
 class HistoryForm : public QWidget {
     Q_OBJECT
@@ -36,6 +39,10 @@ private:
     QString id_;
     QVector<double> x_;
     QVector<double> y_;
+
+#ifndef USE_QCUSTOMPLOT
+    QwtPlotCurve *curve_;
+#endif
 };
 
 #endif // HISTORYFORM_H
