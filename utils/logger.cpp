@@ -89,12 +89,13 @@ void Logger::stopExitMonitor()
 }
 
 static QtMessageHandler preMessageHandler = nullptr;
+static Logger* g_logger = nullptr;
 
 static void myMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
 {
 #ifndef _DEBUG
-    if (type == QtFatalMsg) {
-        g_sm->logger()->info(msg);
+    if (type == QtFatalMsg && g_logger) {
+        g_logger->info(msg);
         __debugbreak();
     }
 #endif
@@ -126,6 +127,7 @@ void Logger::init()
     log_.setFileName(logFileName);
     log_.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append | QIODevice::Unbuffered);
     this->info(__FUNCTION__);
+    g_logger = this;
 
     preMessageHandler = qInstallMessageHandler(myMessageHandler);
 }
@@ -134,6 +136,7 @@ void Logger::shutdown()
 {
     this->info(__FUNCTION__);
     qInstallMessageHandler(nullptr);
+    g_logger = nullptr;
     log_.close();
 }
 
