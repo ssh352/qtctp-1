@@ -87,6 +87,7 @@
     <addaction name="actionQFatal"/>
     <addaction name="actionDebugbreak"/>
     <addaction name="actionDebugBreak"/>
+    <addaction name="actionExit"/>
    </widget>
    <addaction name="menuSystem"/>
    <addaction name="menuData"/>
@@ -167,6 +168,11 @@
   <action name="actionMerge">
    <property name="text">
     <string>merge</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>exit</string>
    </property>
   </action>
  </widget>

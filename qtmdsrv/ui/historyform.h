@@ -8,6 +8,8 @@ namespace Ui {
 class HistoryForm;
 }
 
+#define USE_QCUSTOMPLOT
+
 #ifndef USE_QCUSTOMPLOT
 class QwtPlotCurve;
 #endif

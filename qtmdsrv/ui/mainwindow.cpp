@@ -224,6 +224,7 @@ void MainWindow::on_actionQuit_triggered()
         return;
     }
 
+    Logger::stopExitMonitor();
     qApp->quit();
 }
 
@@ -315,4 +316,9 @@ void MainWindow::on_actionToday_triggered()
 void MainWindow::on_actionMerge_triggered()
 {
     logger()->info("todo");
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    exit(1);
 }

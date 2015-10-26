@@ -1,9 +1,12 @@
 #include "ui/mainwindow.h"
 #include "servicemgr.h"
 #include <QApplication>
+#include "logger.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
+    Logger::startExitMonitor();
+
     QApplication a(argc, argv);
     a.setQuitOnLastWindowClosed(false);
 

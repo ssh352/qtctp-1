@@ -6,6 +6,8 @@
 #include <QFile>
 #include "utils.h"
 #include <QCoreApplication>
+#include "servicemgr.h"
+#include "logger.h"
 
 Profile::Profile(QObject* parent)
     : QObject(parent)
@@ -14,6 +16,7 @@ Profile::Profile(QObject* parent)
 
 void Profile::init()
 {
+    g_sm->logger()->info(__FUNCTION__);
     path_ = QDir::home().absoluteFilePath(appName() + QStringLiteral("/config.json"));
     mkDir(path_);
 
@@ -35,6 +38,7 @@ void Profile::init()
 
 void Profile::shutdown()
 {
+    g_sm->logger()->info(__FUNCTION__);
     commit();
 }
 

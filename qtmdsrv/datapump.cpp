@@ -18,6 +18,7 @@ DataPump::DataPump(QObject* parent)
 
 void DataPump::init()
 {
+    g_sm->logger()->info(__FUNCTION__);
     db_backend_ = new LevelDBBackend;
     db_thread_ = new QThread;
     db_backend_->moveToThread(db_thread_);
@@ -35,6 +36,7 @@ void DataPump::init()
 //db_backend_自己删除自己=
 void DataPump::shutdown()
 {
+    g_sm->logger()->info(__FUNCTION__);
     db_thread_->quit();
     db_thread_->wait();
     delete db_thread_;

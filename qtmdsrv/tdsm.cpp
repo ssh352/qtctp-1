@@ -20,7 +20,7 @@ public:
 private:
     void OnFrontConnected() override
     {
-        info("TdSmSpi::OnFrontConnected");
+        info(__FUNCTION__);
         emit sm()->statusChanged(TDSM_CONNECTED);
     }
 
@@ -50,7 +50,7 @@ private:
     // 3. 发现对于errorid=7，不一定会disconnect后再connected，需要自己去发包=
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        info("TdSmSpi::OnRspUserLogin");
+        info(__FUNCTION__);
         if (bIsLast){
            if(isErrorRsp(pRspInfo, nRequestID)) {
                emit sm()->statusChanged(TDSM_LOGINFAIL);
@@ -62,7 +62,7 @@ private:
 
     void OnRspUserLogout(UserLogoutField* pUserLogout, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        info("TdSmSpi::OnRspUserLogout");
+        info(__FUNCTION__);
         if (bIsLast){
             if(isErrorRsp(pRspInfo, nRequestID)){
                 emit sm()->statusChanged(TDSM_LOGOUTFAIL);
@@ -175,7 +175,7 @@ bool TdSm::init(QString userId, QString password, QString brokerId, QString fron
 
 void TdSm::start()
 {
-    info("TdSm::start");
+    info(__FUNCTION__);
 
     if (tdapi_ != nullptr) {
         qFatal("tdapi_!=nullptr");
@@ -204,7 +204,7 @@ void TdSm::start()
 
 void TdSm::stop()
 {
-    info("TdSm::stop");
+    info(__FUNCTION__);
 
     if (tdapi_ == nullptr) {
         qFatal("tdapi_==nullptr");
@@ -227,7 +227,7 @@ void TdSm::info(QString msg)
 
 
 void TdSm::login(unsigned int delayTick){
-    info("TdSm::login");
+    info(__FUNCTION__);
     emit this->runCmd(new CmdTdLogin(userId_,password_,brokerId_),delayTick);
 }
 
@@ -235,12 +235,12 @@ void TdSm::login(unsigned int delayTick){
 // logout之后会有一个disconnect/connect...先disableautologin
 void TdSm::logout()
 {
-    info("TdSm::logout");
+    info(__FUNCTION__);
     emit this->runCmd(new CmdTdLogout(userId(), brokerId()),0);
 }
 
 void TdSm::queryInstrument()
 {
-    info("TdSm::queryInstrument");
+    info(__FUNCTION__);
     emit this->runCmd(new CmdTdQueryInstrument(),0);
 }

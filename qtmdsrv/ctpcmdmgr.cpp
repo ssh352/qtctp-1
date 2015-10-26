@@ -11,6 +11,7 @@ CtpCmdMgr::CtpCmdMgr(QObject* parent)
 
 void CtpCmdMgr::init()
 {
+    g_sm->logger()->info(__FUNCTION__);
     //100毫秒执行一次
     setInterval(100);
     start();
@@ -18,6 +19,7 @@ void CtpCmdMgr::init()
 
 void CtpCmdMgr::shutdown()
 {
+    g_sm->logger()->info(__FUNCTION__);
     stop();
     if (cmds_.length() != 0) {
         qFatal("cmds_length() != 0");

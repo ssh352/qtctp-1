@@ -4,6 +4,9 @@
 #include <QtWebSockets/QWebSocket>
 #include <QtCore/QDebug>
 
+#include "servicemgr.h"
+#include "logger.h"
+
 TestPushService::TestPushService(quint16 port, QObject *parent) :
     QObject(parent),
     m_pWebSocketServer(Q_NULLPTR),
@@ -65,9 +68,11 @@ PushService::PushService(QObject *parent) : QObject(parent)
 }
 
 void PushService::init(){
+    g_sm->logger()->info(__FUNCTION__);
     pushService_ = new TestPushService(1234);
 }
 
 void PushService::shutdown(){
+    g_sm->logger()->info(__FUNCTION__);
     delete pushService_;
 }

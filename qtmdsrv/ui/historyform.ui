@@ -86,16 +86,16 @@
       <enum>Qt::Vertical</enum>
      </property>
      <widget class="QTableWidget" name="tableWidget"/>
-     <widget class="QwtPlot" name="tickPlot" native="true"/>
+     <widget class="QCustomPlot" name="tickPlot" native="true"/>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QwtPlot</class>
+   <class>QCustomPlot</class>
    <extends>QWidget</extends>
-   <header>qwt_plot.h</header>
+   <header>qcustomplot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

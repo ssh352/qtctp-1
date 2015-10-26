@@ -17,12 +17,14 @@ CtpMgr::CtpMgr(QObject* parent)
 
 void CtpMgr::init()
 {
+    g_sm->logger()->info(__FUNCTION__);
     QObject::connect(this,&CtpMgr::mdDisconnect,g_sm->ctpCmdMgr(),&CtpCmdMgr::onReset);
     QObject::connect(this,&CtpMgr::mdStopped,g_sm->ctpCmdMgr(),&CtpCmdMgr::onReset);
 }
 
 void CtpMgr::shutdown()
 {
+    g_sm->logger()->info(__FUNCTION__);
 }
 
 void CtpMgr::onMdSmStateChanged(int state)

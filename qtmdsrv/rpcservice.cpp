@@ -3,6 +3,9 @@
 
 #include <QtCore/QDebug>
 
+#include "servicemgr.h"
+#include "logger.h"
+
 TestRpcService::TestRpcService(QObject *parent)
     : QJsonRpcService(parent)
 {
@@ -49,6 +52,7 @@ RpcService::RpcService(QObject *parent) : QObject(parent)
 }
 
 void RpcService::init(){
+    g_sm->logger()->info(__FUNCTION__);
     rpcServer_ = new QJsonRpcTcpServer;//QJsonRpcHttpServer;
     rpcServer_->addService(new TestRpcService);
     if (!rpcServer_->listen(QHostAddress::LocalHost, 5555)) {
@@ -58,6 +62,7 @@ void RpcService::init(){
 }
 
 void RpcService::shutdown(){
+    g_sm->logger()->info(__FUNCTION__);
     rpcServer_->close();
     delete rpcServer_;
     rpcServer_ = nullptr;

@@ -46,6 +46,7 @@ private slots:
     void on_actionDebugBreak_triggered();
     void on_actionToday_triggered();
     void on_actionMerge_triggered();
+    void on_actionExit_triggered();
 
 private:
     void closeEvent (QCloseEvent *event) override;

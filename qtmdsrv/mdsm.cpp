@@ -21,7 +21,7 @@ public:
 private:
     void OnFrontConnected() override
     {
-        info("MdSmSpi::OnFrontConnected");
+        info(__FUNCTION__);
         emit sm()->statusChanged(MDSM_CONNECTED);
     }
 
@@ -38,13 +38,13 @@ private:
     // 这个spi不用被调用=（CTPSDK）
     void OnHeartBeatWarning(int nTimeLapse) override
     {
-        info("MdSmSpi::OnHeartBeatWarning");
+        info(__FUNCTION__);
     }
 
     //errorId=7，msg=CTP:还没有初始化=
     void OnRspUserLogin(RspUserLoginField* pRspUserLogin, RspInfoField* pRspInfo, int nRequestID, bool bIsLast) override
     {
-        info("MdSmSpi::OnRspUserLogin");
+        info(__FUNCTION__);
         if (bIsLast){
            if(isErrorRsp(pRspInfo, nRequestID)) {
                emit sm()->statusChanged(MDSM_LOGINFAIL);
@@ -151,7 +151,7 @@ bool MdSm::init(QString userId, QString password, QString brokerId, QString fron
 
 void MdSm::start()
 {
-    info("MdSm::start");
+    info(__FUNCTION__);
 
     if (mdapi_ != nullptr) {
         qFatal("mdapi_!=nullptr");
@@ -178,7 +178,7 @@ void MdSm::start()
 
 void MdSm::stop()
 {
-    info("MdSm::stop");
+    info(__FUNCTION__);
 
     if (mdapi_ == nullptr) {
         qFatal("mdapi_==nullptr");
@@ -200,12 +200,12 @@ void MdSm::info(QString msg)
 }
 
 void MdSm::login(unsigned int delayTick){
-    info("MdSm::login");
+    info(__FUNCTION__);
     emit this->runCmd(new CmdMdLogin(userId_,password_,brokerId_),delayTick);
 }
 
 void MdSm::subscrible(QStringList ids)
 {
-    info("MdSm::subscrible");
+    info(__FUNCTION__);
     emit this->runCmd(new CmdMdSubscrible(ids),0);
 }
