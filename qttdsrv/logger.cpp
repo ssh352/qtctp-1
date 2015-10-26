@@ -27,10 +27,10 @@ static void myExit()
 
 typedef VOID(__stdcall* fn_ExitProcess)(UINT uExitCode);
 typedef BOOL(__stdcall* fn_TerminateProcess)(HANDLE hProcess, UINT uExitCode);
-fn_ExitProcess oldExitProcess = (fn_ExitProcess)::GetProcAddress(::GetModuleHandleW(L"kernel32"), "ExitProcess");
-fn_TerminateProcess oldTerminateProcess = (fn_TerminateProcess)::GetProcAddress(::GetModuleHandleW(L"kernel32"), "TerminateProcess");
+static fn_ExitProcess oldExitProcess = (fn_ExitProcess)::GetProcAddress(::GetModuleHandleW(L"kernel32"), "ExitProcess");
+static fn_TerminateProcess oldTerminateProcess = (fn_TerminateProcess)::GetProcAddress(::GetModuleHandleW(L"kernel32"), "TerminateProcess");
 
-VOID __stdcall myExitProcess(UINT uExitCode)
+static VOID __stdcall myExitProcess(UINT uExitCode)
 {
     if (!g_stopExitMonitor) {
         g_stopExitMonitor = true;
@@ -42,7 +42,7 @@ VOID __stdcall myExitProcess(UINT uExitCode)
     oldExitProcess(uExitCode);
 }
 
-BOOL __stdcall myTerminateProcess(HANDLE hProcess, UINT uExitCode)
+static BOOL __stdcall myTerminateProcess(HANDLE hProcess, UINT uExitCode)
 {
     if (::GetProcessId(hProcess) != ::GetCurrentProcessId()) {
         return oldTerminateProcess(hProcess, uExitCode);
