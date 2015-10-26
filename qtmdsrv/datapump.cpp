@@ -59,13 +59,10 @@ void DataPump::putTick(void* tick)
     emit this->gotTick(newTick, indexRb, rb);
 }
 
-//1.如果和前一个tick一样就不保存了（时间，最新价，成交量，持仓量，买一卖一价，买一卖一申报量）
-//白糖会在每次开盘时候，先发一个上次的收盘tick但日期是不一样的，晕。如23号早上9:00:00会
-//收到一个22号的23:29:59的tick但日期确实23号=
-//2.如果时间无效不保存，如有效区间[09:15:00-15:30:00)[21:00:00-23:30:00) [00:00:00-02:30:00)
-//3.todo(sunwangme):IH在9:15:00时候出现了买一卖一价非常庞大应该是没有初始化的问题，需要处理=
-// 2&3交给客户端去做更合理，mdsrv只负责收原始数据=
+// todo(sunwangme):IH在9:15:00时候出现了买一卖一价非常庞大应该是没有初始化的问题，需要处理=
 bool DataPump::shouldSkipTick(void *tick){
+    // 如果时间无效不保存，如有效区间[09:15:00-15:30:00)[21:00:00-23:30:00) [00:00:00-02:30:00)
+    // 交给客户端去做更合理，mdsrv只负责收原始数据=
     if (0){
         char* timeTick = ((DepthMarketDataField*)tick)->UpdateTime;
         bool valid = false;
@@ -99,6 +96,9 @@ bool DataPump::shouldSkipTick(void *tick){
         }
     }
 
+    // 如果和前一个tick一样就不保存了（时间，最新价，成交量，持仓量，买一卖一价，买一卖一申报量）
+    //白糖会在每次开盘时候，先发一个上次的收盘tick但日期是不一样的，晕。如23号早上9:00:00会
+    //收到一个22号的23:29:59的tick但日期确实23号=
     if(1){
         DepthMarketDataField* mdf = (DepthMarketDataField*)tick;
         QString id = mdf->InstrumentID;
@@ -113,6 +113,19 @@ bool DataPump::shouldSkipTick(void *tick){
                 (mdf->BidVolume1 == lastMdf->BidVolume1) &&
                 (mdf->AskPrice1 == lastMdf->AskPrice1) &&
                 (mdf->AskVolume1 == lastMdf->AskVolume1)) {
+            return true;
+        }
+    }
+
+    // 如果成交量 买一卖一价，买一卖一申报量 都为0，丢弃
+    // 白糖会在夜盘之前发一个这样的tick
+    if(1){
+        DepthMarketDataField* mdf = (DepthMarketDataField*)tick;
+        if ( (mdf->Volume == 0) &&
+             (mdf->BidPrice1 == 0.0) &&
+             (mdf->BidVolume1 == 0) &&
+             (mdf->AskPrice1 == 0.0) &&
+             (mdf->AskVolume1 == 0) ){
             return true;
         }
     }

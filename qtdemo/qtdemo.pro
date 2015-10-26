@@ -15,23 +15,18 @@ include(../qtctp.pri)
 
 SOURCES += main.cpp\
         ui/mainwindow.cpp \
-    crashhandler.cpp \
-    logger.cpp \
     profile.cpp \
-    servicemgr.cpp \
-    utils.cpp
+    servicemgr.cpp
 
 HEADERS  += ui/mainwindow.h \
-    crashhandler.h \
-    logger.h \
     profile.h \
-    servicemgr.h \
-    utils.h
+    servicemgr.h
 
 FORMS    += ui/mainwindow.ui
 
 include(../breakpad.pri)
 include(../mhook.pri)
+include(../utils.pri)
 
 RESOURCES += \
     systray.qrc

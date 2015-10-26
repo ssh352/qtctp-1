@@ -19,7 +19,6 @@ SOURCES += main.cpp\
     ui/logindialog.cpp \
     servicemgr.cpp \
     profile.cpp \
-    logger.cpp \
     ctpcmd.cpp \
     mdsm.cpp \
     ringbuffer.cpp \
@@ -27,13 +26,11 @@ SOURCES += main.cpp\
     ctpcmdmgr.cpp \
     ctpmgr.cpp \
     datapump.cpp \
-    crashhandler.cpp \
     ui/instrumentsform.cpp \
     ui/historyform.cpp \
     ui/ringbufferform.cpp \
     rpcservice.cpp \
-    pushservice.cpp \
-    utils.cpp
+    pushservice.cpp
 
 
 HEADERS  += ui/mainwindow.h \
@@ -41,7 +38,6 @@ HEADERS  += ui/mainwindow.h \
     ui/logindialog.h \
     servicemgr.h \
     profile.h \
-    logger.h \
     ctpcmd.h \
     mdsm.h \
     ringbuffer.h \
@@ -49,13 +45,11 @@ HEADERS  += ui/mainwindow.h \
     ctpcmdmgr.h \
     ctpmgr.h \
     datapump.h \
-    crashhandler.h \
     ui/instrumentsform.h \
     ui/historyform.h \
     ui/ringbufferform.h \
     rpcservice.h \
-    pushservice.h \
-    utils.h
+    pushservice.h
 
 
 FORMS    += ui/mainwindow.ui \
@@ -72,7 +66,7 @@ include(../qjsonrpc.pri)
 include(../qcustomplot.pri)
 include(../qwt.pri)
 include(../mhook.pri)
-
+include(../utils.pri)
 
 RESOURCES += \
     systray.qrc
