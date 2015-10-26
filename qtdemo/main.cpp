@@ -5,9 +5,8 @@
 
 int main(int argc, char *argv[])
 {
-    Logger::startExitMonitor();
-
     QApplication a(argc, argv);
+    Logger::startExitMonitor();
     a.setQuitOnLastWindowClosed(false);
 
     ServiceMgr s;

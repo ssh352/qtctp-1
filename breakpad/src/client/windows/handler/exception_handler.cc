@@ -727,6 +727,8 @@ bool ExceptionHandler::WriteMinidumpOnHandlerThread(
   exception_info_ = NULL;
   assertion_ = NULL;
 
+  UpdateNextID();
+
   LeaveCriticalSection(&handler_critical_section_);
 
   return status;
@@ -757,7 +759,6 @@ bool ExceptionHandler::WriteMinidumpForException(EXCEPTION_POINTERS* exinfo) {
   }
 
   bool success = WriteMinidumpOnHandlerThread(exinfo, NULL);
-  UpdateNextID();
   return success;
 }
 
