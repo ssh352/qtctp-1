@@ -33,6 +33,7 @@ HEADERS  += ui/mainwindow.h \
 FORMS    += ui/mainwindow.ui
 
 include(../breakpad.pri)
+include(../mhook.pri)
 
 RESOURCES += \
     systray.qrc \

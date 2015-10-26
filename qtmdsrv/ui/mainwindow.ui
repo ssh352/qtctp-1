@@ -88,6 +88,8 @@
     <addaction name="actionDebugbreak"/>
     <addaction name="actionDebugBreak"/>
     <addaction name="actionExit"/>
+    <addaction name="actionExitProcess"/>
+    <addaction name="actionTerminateProcess"/>
    </widget>
    <addaction name="menuSystem"/>
    <addaction name="menuData"/>
@@ -173,6 +175,16 @@
   <action name="actionExit">
    <property name="text">
     <string>exit</string>
+   </property>
+  </action>
+  <action name="actionExitProcess">
+   <property name="text">
+    <string>ExitProcess</string>
+   </property>
+  </action>
+  <action name="actionTerminateProcess">
+   <property name="text">
+    <string>TerminateProcess</string>
    </property>
   </action>
  </widget>

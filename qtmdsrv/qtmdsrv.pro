@@ -71,6 +71,8 @@ include(../breakpad.pri)
 include(../qjsonrpc.pri)
 include(../qcustomplot.pri)
 include(../qwt.pri)
+include(../mhook.pri)
+
 
 RESOURCES += \
     systray.qrc

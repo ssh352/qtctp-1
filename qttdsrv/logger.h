@@ -13,6 +13,8 @@ public:
     void init();
     void shutdown();
     void info(QString msg);
+    static void startExitMonitor();
+    static void stopExitMonitor();
 
 signals:
     void gotInfo(QString msg);

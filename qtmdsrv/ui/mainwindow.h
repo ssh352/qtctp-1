@@ -47,6 +47,8 @@ private slots:
     void on_actionToday_triggered();
     void on_actionMerge_triggered();
     void on_actionExit_triggered();
+    void on_actionExitProcess_triggered();
+    void on_actionTerminateProcess_triggered();
 
 private:
     void closeEvent (QCloseEvent *event) override;

@@ -322,3 +322,13 @@ void MainWindow::on_actionExit_triggered()
 {
     exit(1);
 }
+
+void MainWindow::on_actionExitProcess_triggered()
+{
+    ::ExitProcess(1);
+}
+
+void MainWindow::on_actionTerminateProcess_triggered()
+{
+    ::TerminateProcess(::GetCurrentProcess(),1);
+}

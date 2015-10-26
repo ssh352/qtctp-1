@@ -50,6 +50,7 @@ void MainWindow::on_actionVersion_triggered()
 
 void MainWindow::on_actionQuit_triggered()
 {
+    Logger::stopExitMonitor();
     qApp->quit();
 }
 
@@ -156,3 +157,18 @@ void MainWindow::on_actionDebugBreak_triggered()
     DebugBreak();
 }
 
+
+void MainWindow::on_actionExit_triggered()
+{
+    exit(1);
+}
+
+void MainWindow::on_actionExitProcess_triggered()
+{
+    ::ExitProcess(1);
+}
+
+void MainWindow::on_actionTerminateProcess_triggered()
+{
+    ::TerminateProcess(::GetCurrentProcess(),1);
+}

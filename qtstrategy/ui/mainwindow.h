@@ -36,6 +36,9 @@ private slots:
     void on_actionQFatal_triggered();
     void on_actionDebugbreak_triggered();
     void on_actionDebugBreak_triggered();
+    void on_actionExit_triggered();
+    void on_actionExitProcess_triggered();
+    void on_actionTerminateProcess_triggered();
 
     void on_actionHello_triggered();
     void on_actionText_triggered();

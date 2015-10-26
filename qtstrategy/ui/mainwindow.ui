@@ -51,6 +51,9 @@
     <addaction name="actionQFatal"/>
     <addaction name="actionDebugbreak"/>
     <addaction name="actionDebugBreak"/>
+    <addaction name="actionExit"/>
+    <addaction name="actionExitProcess"/>
+    <addaction name="actionTerminateProcess"/>
    </widget>
    <widget class="QMenu" name="menuScript">
     <property name="title">
@@ -118,6 +121,21 @@
   <action name="actionDebug">
    <property name="text">
     <string>debug</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>exit</string>
+   </property>
+  </action>
+  <action name="actionExitProcess">
+   <property name="text">
+    <string>ExitProcess</string>
+   </property>
+  </action>
+  <action name="actionTerminateProcess">
+   <property name="text">
+    <string>TerminateProcess</string>
    </property>
   </action>
  </widget>
