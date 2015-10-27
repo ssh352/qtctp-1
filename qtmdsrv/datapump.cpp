@@ -98,7 +98,7 @@ bool DataPump::shouldSkipTick(void *tick){
 
     // 如果和前一个tick一样就不保存了（时间，最新价，成交量，持仓量，买一卖一价，买一卖一申报量）
     //白糖会在每次开盘时候，先发一个上次的收盘tick但日期是不一样的，晕。如23号早上9:00:00会
-    //收到一个22号的23:29:59的tick但日期确实23号=
+    //收到一个22号的23:29:59的tick但日期却是23号=
     if(1){
         DepthMarketDataField* mdf = (DepthMarketDataField*)tick;
         QString id = mdf->InstrumentID;
@@ -119,12 +119,13 @@ bool DataPump::shouldSkipTick(void *tick){
 
     // 如果成交量 买一卖一价，买一卖一申报量 都为0，丢弃
     // 白糖会在夜盘之前发一个这样的tick
+    // 发现ic会推一个买一卖一为DBL_MAX的东西过来=
     if(1){
         DepthMarketDataField* mdf = (DepthMarketDataField*)tick;
         if ( (mdf->Volume == 0) &&
-             (mdf->BidPrice1 == 0.0) &&
+             (!qIsFinite(mdf->BidPrice1) || mdf->BidPrice1 == 0.0 || mdf->BidPrice1 == DBL_MAX) &&
              (mdf->BidVolume1 == 0) &&
-             (mdf->AskPrice1 == 0.0) &&
+             (!qIsFinite(mdf->AskPrice1) || mdf->AskPrice1 == 0.0 || mdf->AskPrice1 == DBL_MAX) &&
              (mdf->AskVolume1 == 0) ){
             return true;
         }

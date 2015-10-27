@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/ctpsdk_bin">
+        <file>x64/thostmduserapi.dll</file>
+        <file>x64/thosttraderapi.dll</file>
+    </qresource>
+</RCC>

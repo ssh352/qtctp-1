@@ -15,5 +15,12 @@ HEADERS += \
     $$SOURCE_DIR/TraderApi.h \
     $$SOURCE_DIR/sdk_utils.h \
 
-RESOURCES += \
-    $$SOURCE_DIR/ctpsdk_bin.qrc
+contains(QT_ARCH, i386) {
+    #message("32-bit")
+    RESOURCES += \
+        $$SOURCE_DIR/ctpsdk_bin.qrc
+} else {
+    #message("64-bit")
+    RESOURCES += \
+        $$SOURCE_DIR/ctpsdk_bin_x64.qrc
+}
