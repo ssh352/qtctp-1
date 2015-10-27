@@ -34,17 +34,26 @@ Profile Logger ServiceMgr:
 编译
 ======
 系统：win7 sp1 x64
-编译器：vs2013 update4 x86
+编译器：vs2013 update4 x64
 依赖：
-Qt5.5.1
-Win32OpenSSL-1_0_1p.exe
+Qt5.5.1 x64
+v6.3.6_20150515_traderapi_win64.zip
+Win64OpenSSL-1_0_2d.exe
+mhook-2.4.zip
+leveldb 1.18
+qwt-6.1.2.zip
+QCustomPlot 1.3.1
+google breakpad
 
 QT配置
 ======
-shared:
+x64-shared:
+configure -prefix "c:\qtlite\qt5.5-vs12-shared-x64" -confirm-license -opensource -debug-and-release -shared -accessibility -nomake tests -nomake examples -no-compile-examples -c++11 -ltcg -qt-sql-sqlite -plugin-sql-sqlite -no-freetype -no-opengl -no-qml-debug -no-icu -no-angle -openssl -I "C:\OpenSSL-Win64\include" -qt-zlib -qt-libpng -qt-libjpeg -no-dbus -no-audio-backend -no-wmf-backend -no-style-fusion -force-debug-info -mp -platform win32-msvc2013
+x64-static:
+configure -prefix "c:\qtlite\qt5.5-vs12-static-x64" -confirm-license -opensource -debug-and-release -static -static-runtime -accessibility -nomake tests -nomake examples -no-compile-examples -c++11 -ltcg -qt-sql-sqlite -plugin-sql-sqlite -no-freetype -no-opengl -no-qml-debug -no-icu -no-angle -openssl-linked -I "C:\OpenSSL-Win64\include" OPENSSL_LIBS_DEBUG="C:\OpenSSL-Win64\lib\VC\static\ssleay32MTd.lib C:\OpenSSL-Win64\lib\VC\static\libeay32MTd.lib" OPENSSL_LIBS_RELEASE="C:\OpenSSL-Win64\lib\VC\static\ssleay32MT.lib C:\OpenSSL-Win64\lib\VC\static\libeay32MT.lib" -qt-zlib -qt-libpng -qt-libjpeg -no-dbus -no-audio-backend -no-wmf-backend -no-style-fusion -force-debug-info -mp -platform win32-msvc2013
+x86-shared:
 configure -prefix "c:\qtlite\qt5.5-vs12-shared" -confirm-license -opensource -debug-and-release -shared -target xp -accessibility -nomake tests -nomake examples -no-compile-examples -c++11 -ltcg -qt-sql-sqlite -plugin-sql-sqlite -no-freetype -no-opengl -no-qml-debug -no-icu -no-angle -openssl -I "C:\OpenSSL-Win32\include" -qt-zlib -qt-libpng -qt-libjpeg -no-dbus -no-audio-backend -no-wmf-backend -no-style-fusion -force-debug-info -mp -platform win32-msvc2013
-
-static:
+x86-static:
 configure -prefix "c:\qtlite\qt5.5-vs12-static" -confirm-license -opensource -debug-and-release -static -static-runtime -target xp -accessibility -nomake tests -nomake examples -no-compile-examples -c++11 -ltcg -qt-sql-sqlite -plugin-sql-sqlite -no-freetype -no-opengl -no-qml-debug -no-icu -no-angle -openssl-linked -I "C:\OpenSSL-Win32\include" OPENSSL_LIBS_DEBUG="C:\OpenSSL-Win32\lib\VC\static\ssleay32MTd.lib C:\OpenSSL-Win32\lib\VC\static\libeay32MTd.lib" OPENSSL_LIBS_RELEASE="C:\OpenSSL-Win32\lib\VC\static\ssleay32MT.lib C:\OpenSSL-Win32\lib\VC\static\libeay32MT.lib" -qt-zlib -qt-libpng -qt-libjpeg -no-dbus -no-audio-backend -no-wmf-backend -no-style-fusion -force-debug-info -mp -platform win32-msvc2013
 
 qt.pro:
