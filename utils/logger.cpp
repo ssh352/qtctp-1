@@ -68,7 +68,11 @@ void Logger::startExitMonitor()
     SetErrorMode(existing_flags | new_flags);
 #endif
 
+#ifdef Q_OS_WIN64
+    QString reporter = "C:/Program Files (x86)/Windows Kits/8.0/Debuggers/x64/windbg.exe";
+#else
     QString reporter = "C:/Program Files (x86)/Windows Kits/8.0/Debuggers/x86/windbg.exe";
+#endif
     QString params = " -z";
     if (!QDir().exists(reporter)) {
         reporter = "c:/windows/system32/notepad.exe";
