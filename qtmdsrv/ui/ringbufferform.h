@@ -14,7 +14,7 @@ class RingBufferForm : public QWidget
 public:
     explicit RingBufferForm(QWidget *parent = 0);
     ~RingBufferForm();
-    void Init(QString id);
+    void init(QString id);
 
 private:
     void scanTicks();

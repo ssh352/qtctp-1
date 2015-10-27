@@ -22,7 +22,9 @@ public:
     void putTick(void* tick);
     void putInstrument(void* instrument);
     RingBuffer* getRingBuffer(QString id);
-    leveldb::DB* getLevelDB();
+    leveldb::DB* getTodayDB();
+    leveldb::DB* getHistoryDB();
+    LevelDBBackend* getBackend();
     void initRingBuffer(QStringList ids);
     void freeRingBuffer();
 
@@ -44,27 +46,6 @@ private:
     const int ringBufferLen_ = 256;
     QThread* db_thread_ = nullptr;
     LevelDBBackend* db_backend_ = nullptr;
-};
-
-class LevelDBBackend : public QObject{
-    Q_OBJECT
-public:
-    explicit LevelDBBackend(QObject* parent = 0);
-    ~LevelDBBackend();
-    void init();
-    void shutdown();
-    leveldb::DB* getLevelDB();
-
-signals:
-    void opened();
-
-public slots:
-    void putTick(void* tick, int indexRb, void* rb);
-
-private:
-
-private:
-    leveldb::DB* db_ = nullptr;
 };
 
 #endif // DATAPUMP_H

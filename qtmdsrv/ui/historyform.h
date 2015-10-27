@@ -13,6 +13,9 @@ class HistoryForm;
 #ifndef USE_QCUSTOMPLOT
 class QwtPlotCurve;
 #endif
+namespace leveldb{
+class DB;
+}
 
 class HistoryForm : public QWidget {
     Q_OBJECT
@@ -20,7 +23,7 @@ class HistoryForm : public QWidget {
 public:
     explicit HistoryForm(QWidget* parent = 0);
     ~HistoryForm();
-    void Init(QString id);
+    void init(QString id,leveldb::DB* db,bool display_bar);
 
 private slots:
     void on_first128_clicked();
@@ -31,9 +34,22 @@ private slots:
     void on_delButton_clicked();
 
 private:
-    void onGotTick(void* tick);
+    void onGotTick(QString key,void* tick);
+    void onGotBarM1(QString key,void* tick);
     void initGraph();
     void drawGraph();
+
+    void on_first128Tick_clicked();
+    void on_next128Tick_clicked();
+    void on_pre128Tick_clicked();
+    void on_last128Tick_clicked();
+    void on_seekButtonTick_clicked();
+
+    void on_first128Bar_clicked();
+    void on_next128Bar_clicked();
+    void on_pre128Bar_clicked();
+    void on_last128Bar_clicked();
+    void on_seekButtonBar_clicked();
 
 private:
     Ui::HistoryForm* ui;
@@ -45,6 +61,9 @@ private:
 #ifndef USE_QCUSTOMPLOT
     QwtPlotCurve *curve_;
 #endif
+
+    leveldb::DB *db_ = nullptr;
+    bool display_bar_ = false;
 };
 
 #endif // HISTORYFORM_H

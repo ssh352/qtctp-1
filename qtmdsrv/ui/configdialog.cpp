@@ -16,7 +16,7 @@ ConfigDialog::~ConfigDialog()
     delete ui;
 }
 
-void ConfigDialog::Save(){
+void ConfigDialog::save(){
     Profile* profile = g_sm->profile();
     profile->put("userId",ui->userId->text());
     profile->put("brokerId",ui->brokerId->text());
@@ -26,7 +26,7 @@ void ConfigDialog::Save(){
     profile->commit();
 }
 
-void ConfigDialog::Load(){
+void ConfigDialog::load(){
     Profile* profile = g_sm->profile();
     ui->userId->setText(profile->get("userId","").toString());
     ui->brokerId->setText(profile->get("brokerId","").toString());

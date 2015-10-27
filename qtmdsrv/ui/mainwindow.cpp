@@ -18,6 +18,7 @@
 #include "datapump.h"
 #include "instrumentsform.h"
 #include <windows.h>
+#include "mergeform.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -105,9 +106,9 @@ void MainWindow::on_actionVersion_triggered()
 void MainWindow::on_actionConfig_triggered()
 {
     ConfigDialog dlg(this);
-    dlg.Load();
+    dlg.load();
     if (dlg.exec()) {
-        dlg.Save();
+        dlg.save();
     }
 }
 
@@ -248,7 +249,7 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 {
     RingBufferForm* form = new RingBufferForm();
     form->setWindowFlags(Qt::Window);
-    form->Init(ui->tableWidget->item(row, 0)->text());
+    form->init(ui->tableWidget->item(row, 0)->text());
     form->show();
 }
 
@@ -286,14 +287,16 @@ void MainWindow::on_actionDerefZeroCrash_triggered()
 //显示历史列表=
 void MainWindow::on_actionHistory_triggered()
 {
-    logger()->info("todo");
+    InstrumentsForm* form = new InstrumentsForm();
+    form->setWindowFlags(Qt::Window);
+    form->init(g_sm->dataPump()->getHistoryDB(),true);
+    form->show();
 }
 
 void MainWindow::on_actionQFatal_triggered()
 {
     qFatal("crash for qFatal");
 }
-
 
 void MainWindow::on_actionDebugbreak_triggered()
 {
@@ -309,13 +312,16 @@ void MainWindow::on_actionToday_triggered()
 {
     InstrumentsForm* form = new InstrumentsForm();
     form->setWindowFlags(Qt::Window);
-    form->init();
+    form->init(g_sm->dataPump()->getTodayDB(),false);
     form->show();
 }
 
 void MainWindow::on_actionMerge_triggered()
 {
-    logger()->info("todo");
+    MergeForm* form = new MergeForm();
+    form->setWindowFlags(Qt::Window);
+    form->init();
+    form->show();
 }
 
 void MainWindow::on_actionExit_triggered()

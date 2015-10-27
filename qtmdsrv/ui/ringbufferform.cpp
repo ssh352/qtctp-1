@@ -15,7 +15,7 @@ RingBufferForm::RingBufferForm(QWidget* parent)
     ui->setupUi(this);
 
     //设置列=
-    instruments_col_ = { "InstrumentID", "TradingDay", "UpdateTime", "UpdateMillisec",
+    instruments_col_ = { "TradingDay", "UpdateTime", "UpdateMillisec",
         "LastPrice", "Volume", "OpenInterest",
         "BidPrice1", "BidVolume1", "AskPrice1", "AskVolume1" };
     this->ui->tableWidget->setColumnCount(instruments_col_.length());
@@ -29,7 +29,7 @@ RingBufferForm::~RingBufferForm()
     delete ui;
 }
 
-void RingBufferForm::Init(QString id)
+void RingBufferForm::init(QString id)
 {
     id_ = id;
     this->setWindowTitle(QString("ringbuffer-")+id);
@@ -72,7 +72,6 @@ void RingBufferForm::onGotTick(void* tick)
     auto mdf = (DepthMarketDataField*)tick;
 
     QVariantMap mdItem;
-    mdItem.insert("InstrumentID", mdf->InstrumentID);
     mdItem.insert("TradingDay", mdf->TradingDay);
     mdItem.insert("UpdateTime", mdf->UpdateTime);
     mdItem.insert("UpdateMillisec", mdf->UpdateMillisec);
@@ -103,7 +102,7 @@ void RingBufferForm::on_historyButton_clicked()
 {
     HistoryForm* form = new HistoryForm();
     form->setWindowFlags(Qt::Window);
-    form->Init(id_);
+    form->init(id_,g_sm->dataPump()->getTodayDB(),false);
     form->show();
 }
 

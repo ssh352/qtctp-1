@@ -7,6 +7,9 @@
 namespace Ui {
 class InstrumentsForm;
 }
+namespace leveldb{
+class DB;
+}
 
 class InstrumentsForm : public QWidget
 {
@@ -17,7 +20,7 @@ public:
     ~InstrumentsForm();
 
 public:
-    void init();
+    void init(leveldb::DB* db,bool display_bar);
 
 private slots:
     void on_refreshButton_clicked();
@@ -30,6 +33,8 @@ private:
 private:
     Ui::InstrumentsForm *ui;
     QStringList instruments_col_;
+    leveldb::DB* db_ = nullptr;
+    bool display_bar_ = false;
 };
 
 #endif // INSTRUMENTSFORM_H

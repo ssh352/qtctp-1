@@ -10,6 +10,8 @@
 #include <leveldb/db.h>
 #include "utils.h"
 #include "profile.h"
+#include "sdk_utils.h"
+#include "leveldbbackend.h"
 
 DataPump::DataPump(QObject* parent)
     : QObject(parent)
@@ -26,7 +28,6 @@ void DataPump::init()
     QObject::connect(db_thread_, &QThread::started, db_backend_, &LevelDBBackend::init);
     QObject::connect(db_thread_, &QThread::finished, db_backend_, &LevelDBBackend::shutdown);
     QObject::connect(this, &DataPump::gotTick, db_backend_, &LevelDBBackend::putTick);
-    QObject::connect(db_backend_, &LevelDBBackend::opened, this, &DataPump::initInstrumentLocator);
 
     db_thread_->start();
 }
@@ -136,17 +137,8 @@ bool DataPump::shouldSkipTick(void *tick){
 
 void DataPump::putInstrument(void* pInstrument)
 {
-    InstrumentField* instrument = (InstrumentField*)pInstrument;
-    QString id = instrument->InstrumentID;
-    leveldb::DB* db = getLevelDB();
-
-    QString key;
-    leveldb::Slice val((const char*)instrument, sizeof(InstrumentField));
-    leveldb::WriteOptions options;
-    key = QStringLiteral("instrument-") + id;
-    db->Put(options, key.toStdString(), val);
-
-    initTickLocator(id);
+    leveldb::DB* db = getTodayDB();
+    this->db_backend_->putInstrument(pInstrument,db,true,false,false);
 }
 
 void DataPump::initRingBuffer(QStringList ids)
@@ -167,7 +159,7 @@ void DataPump::initRingBuffer(QStringList ids)
 //修补tick的ms还是需要回读一下=
 void DataPump::loadRingBufferFromBackend(QStringList ids)
 {
-    auto db = getLevelDB();
+    auto db = getTodayDB();
     for (auto id : ids) {
         auto rb = getRingBuffer(id);
 
@@ -188,14 +180,14 @@ void DataPump::loadRingBufferFromBackend(QStringList ids)
         }
         int count = 0;
         for (; it->Valid() && count < rb->count(); it->Prev()) {
+            //遇到了前后两个结束item
+            auto mdf = (DepthMarketDataField*)it->value().data();
+            if (mdf->InstrumentID[0] == 0) {
+                break;
+            }
             count++;
             if (it->value().size() != sizeof(DepthMarketDataField)) {
                 qFatal("it->value().size() != sizeof(DepthMarketDataField)");
-            }
-            auto mdf = (DepthMarketDataField*)it->value().data();
-            //遇到了前后两个结束item
-            if (mdf->InstrumentID[0] == 0) {
-                break;
             }
             rb->load(rb->count() - count, mdf);
         }
@@ -232,9 +224,18 @@ RingBuffer* DataPump::getRingBuffer(QString id)
     return rb;
 }
 
-leveldb::DB* DataPump::getLevelDB()
+leveldb::DB* DataPump::getTodayDB()
 {
-    return db_backend_->getLevelDB();
+    return db_backend_->getTodayDB();
+}
+
+leveldb::DB* DataPump::getHistoryDB()
+{
+    return db_backend_->getHistoryDB();
+}
+
+LevelDBBackend* DataPump::getBackend(){
+    return this->db_backend_;
 }
 
 // 和前一个tick比较，如果time相同，就改ms为前一个的ms+1，不同，ms改为0
@@ -258,90 +259,13 @@ void DataPump::fixTickMs(void* tick, int indexRb, RingBuffer* rb)
 //初始化instrument定位=
 void DataPump::initInstrumentLocator()
 {
-    leveldb::DB* db = getLevelDB();
-
-    InstrumentField* idItem = new (InstrumentField);
-    memset(idItem, 0, sizeof(InstrumentField));
-    QString key;
-    leveldb::Slice val((const char*)idItem, sizeof(InstrumentField));
-    leveldb::WriteOptions options;
-    key = QStringLiteral("instrument+");
-    db->Put(options, key.toStdString(), val);
-    key = QStringLiteral("instrument=");
-    db->Put(options, key.toStdString(), val);
+    leveldb::DB* db = getTodayDB();
+    db_backend_->initInstrumentLocator(db);
 }
 
 //初始化tick定位=
 void DataPump::initTickLocator(QString id)
 {
-    leveldb::DB* db = getLevelDB();
-
-    DepthMarketDataField* tick = new (DepthMarketDataField);
-    memset(tick, 0, sizeof(DepthMarketDataField));
-    QString key;
-    leveldb::Slice val((const char*)tick, sizeof(DepthMarketDataField));
-    leveldb::WriteOptions options;
-    key = QStringLiteral("tick-") + id + QStringLiteral("+");
-    db->Put(options, key.toStdString(), val);
-    key = QStringLiteral("tick-") + id + QStringLiteral("=");
-    db->Put(options, key.toStdString(), val);
-}
-
-//////
-LevelDBBackend::LevelDBBackend(QObject* parent)
-    : QObject(parent)
-{
-}
-
-LevelDBBackend::~LevelDBBackend()
-{
-}
-
-void LevelDBBackend::init()
-{
-    QString path = Profile::todayDbPath();
-    mkDir(path);
-    leveldb::Options options;
-    options.create_if_missing = true;
-    options.error_if_exists = false;
-    options.compression = leveldb::kNoCompression;
-    options.paranoid_checks = false;
-    leveldb::DB* db;
-    leveldb::Status status = leveldb::DB::Open(options,
-        path.toStdString(),
-        &db);
-    if (status.ok()) {
-        db_ = db;
-        emit opened();
-    }
-    else {
-        qFatal("leveldb::DB::Open fail");
-    }
-}
-
-void LevelDBBackend::shutdown()
-{
-    delete db_;
-    db_ = nullptr;
-
-    delete this;
-}
-
-void LevelDBBackend::putTick(void* tick, int indexRb, void* rb)
-{
-    auto mdf = (DepthMarketDataField*)tick;
-    QString id = mdf->InstrumentID;
-    auto db = getLevelDB();
-    QString key = QString().sprintf("tick-%s-%s-%s-%d", mdf->InstrumentID, mdf->ActionDay, mdf->UpdateTime, mdf->UpdateMillisec);
-    leveldb::Slice val((const char*)tick, sizeof(DepthMarketDataField));
-    leveldb::WriteOptions options;
-    db->Put(options, key.toStdString(), val);
-}
-
-leveldb::DB* LevelDBBackend::getLevelDB()
-{
-    if (db_ == nullptr) {
-        qFatal("db_ == nullptr");
-    }
-    return db_;
+    leveldb::DB* db = getTodayDB();
+    db_backend_->initTickLocator(id,db,true);
 }

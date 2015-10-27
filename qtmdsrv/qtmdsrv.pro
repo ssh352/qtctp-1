@@ -30,7 +30,9 @@ SOURCES += main.cpp\
     ui/historyform.cpp \
     ui/ringbufferform.cpp \
     rpcservice.cpp \
-    pushservice.cpp
+    pushservice.cpp \
+    ui/mergeform.cpp \
+    leveldbbackend.cpp
 
 
 HEADERS  += ui/mainwindow.h \
@@ -49,7 +51,9 @@ HEADERS  += ui/mainwindow.h \
     ui/historyform.h \
     ui/ringbufferform.h \
     rpcservice.h \
-    pushservice.h
+    pushservice.h \
+    ui/mergeform.h \
+    leveldbbackend.h
 
 
 FORMS    += ui/mainwindow.ui \
@@ -57,7 +61,8 @@ FORMS    += ui/mainwindow.ui \
     ui/logindialog.ui \
     ui/instrumentsform.ui \
     ui/historyform.ui \
-    ui/ringbufferform.ui
+    ui/ringbufferform.ui \
+    ui/mergeform.ui
 
 include(../ctpsdk.pri)
 include(../leveldb.pri)

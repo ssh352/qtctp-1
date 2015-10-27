@@ -1,8 +1,8 @@
 #include "InstrumentsForm.h"
 #include "ui_instrumentsform.h"
 #include "historyform.h"
-#include "servicemgr.h"
-#include "datapump.h"
+//#include "servicemgr.h"
+//#include "datapump.h"
 #include "ApiStruct.h"
 #include <leveldb/db.h>
 #include "utils.h"
@@ -28,10 +28,11 @@ InstrumentsForm::~InstrumentsForm()
     delete ui;
 }
 
-void InstrumentsForm::init()
+void InstrumentsForm::init(leveldb::DB* db,bool display_bar)
 {
-
     this->setWindowTitle(QStringLiteral("instruments"));
+    db_ = db;
+    display_bar_ = display_bar;
     refresh();
 }
 
@@ -42,16 +43,12 @@ void InstrumentsForm::on_refreshButton_clicked()
 
 void InstrumentsForm::refresh()
 {
-    leveldb::DB* db = g_sm->dataPump()->getLevelDB();
-    if (!db) {
-        return;
-    }
-
+    leveldb::DB* db = db_;//g_sm->dataPump()->getTodayDB();
     leveldb::ReadOptions options;
     options.fill_cache = false;
     leveldb::Iterator* it = db->NewIterator(options);
     if (!it) {
-        return;
+        qFatal("NewIterator == nullptr");
     }
 
     //第一个是instrument+
@@ -67,13 +64,13 @@ void InstrumentsForm::refresh()
         it->Next();
     }
     for (; it->Valid(); it->Next()) {
-        if (it->value().size() != sizeof(InstrumentField)) {
-            qFatal("it->value().size() != sizeof(InstrumentField)");
-        }
-        auto item = (InstrumentField*)it->value().data();
         //遇到了前后两个结束item
+        auto item = (InstrumentField*)it->value().data();
         if (item->InstrumentID[0] == 0) {
             break;
+        }
+        if (it->value().size() != sizeof(InstrumentField)) {
+            qFatal("it->value().size() != sizeof(InstrumentField)");
         }
         onGotInstrument(item);
     }
@@ -114,6 +111,6 @@ void InstrumentsForm::on_tableWidget_cellDoubleClicked(int row, int column)
 {
     HistoryForm* form = new HistoryForm();
     form->setWindowFlags(Qt::Window);
-    form->Init(ui->tableWidget->item(row, 0)->text());
+    form->init(ui->tableWidget->item(row, 0)->text(),db_,display_bar_);
     form->show();
 }
